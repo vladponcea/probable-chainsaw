@@ -107,3 +107,72 @@ export const integrationsApi = {
   },
 };
 
+export interface DashboardMetrics {
+  speedToLead: number | null;
+  failedPaymentRate: number;
+  bookingRate: number | null;
+  cancellationRate: number | null;
+  crmHygiene: number;
+  averageDealValue: number | null;
+  pipelineVelocity: number | null;
+  totalRevenue: number;
+}
+
+export interface SyncStatus {
+  lastSync: string | null;
+  status: string;
+}
+
+export const dashboardApi = {
+  getMetrics: async (
+    token: string,
+    period: 'all' | '30d' = 'all',
+  ): Promise<DashboardMetrics> => {
+    const response = await api.get(`/dashboard/${token}/metrics`, {
+      params: { period },
+    });
+    return response.data;
+  },
+
+  triggerSync: async (token: string): Promise<{ success: boolean; message: string; status?: string }> => {
+    const response = await api.post(`/dashboard/${token}/sync`);
+    return response.data;
+  },
+
+  getSyncStatus: async (token: string): Promise<SyncStatus> => {
+    const response = await api.get(`/dashboard/${token}/sync-status`);
+    return response.data;
+  },
+
+  updateCalendly: async (
+    token: string,
+    data: ConnectIntegrationRequest,
+  ): Promise<ConnectIntegrationResponse> => {
+    const response = await api.post(`/dashboard/${token}/integrations/calendly`, data);
+    return response.data;
+  },
+
+  updateClose: async (
+    token: string,
+    data: ConnectIntegrationRequest,
+  ): Promise<ConnectIntegrationResponse> => {
+    const response = await api.post(`/dashboard/${token}/integrations/close`, data);
+    return response.data;
+  },
+
+  updateStripe: async (
+    token: string,
+    data: ConnectIntegrationRequest,
+  ): Promise<ConnectIntegrationResponse> => {
+    const response = await api.post(`/dashboard/${token}/integrations/stripe`, data);
+    return response.data;
+  },
+};
+
+export const mockDataApi = {
+  generate: async (token: string, count: number = 10) => {
+    const response = await api.post(`/dashboard/${token}/mock-data/generate?count=${count}`, {});
+    return response.data;
+  },
+};
+

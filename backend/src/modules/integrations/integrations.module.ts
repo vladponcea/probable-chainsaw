@@ -7,6 +7,7 @@ import { ClientsModule } from '../clients/clients.module';
   imports: [ClientsModule],
   controllers: [IntegrationsController],
   providers: [IntegrationsService],
+  exports: [IntegrationsService],
 })
 export class IntegrationsModule {}
 

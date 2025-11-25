@@ -80,6 +80,7 @@ export class ClientsService {
             integrations: true,
             bookedCalls: true,
             leads: true,
+            deals: true,
             payments: true,
           },
         },

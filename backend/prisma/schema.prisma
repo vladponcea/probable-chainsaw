@@ -24,6 +24,7 @@ model Client {
   integrations ClientIntegration[]
   bookedCalls  BookedCall[]
   leads        Lead[]
+  deals        Deal[]
   payments     Payment[]
 }
 
@@ -55,37 +56,66 @@ model BookedCall {
   updatedAt   DateTime @updatedAt
 
   @@index([clientId, source])
+  @@unique([clientId, externalId, source])
 }
 
 model Lead {
-  id         String   @id @default(cuid())
-  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  clientId   String
-  externalId String
-  source     String   // "close" | "ghl" | "hubspot"
-  firstName  String?
-  lastName   String?
-  email      String?
-  status     String?  // pipeline stage
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @default(cuid())
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId        String
+  externalId      String
+  source          String   // "close" | "ghl" | "hubspot"
+  firstName       String?
+  lastName        String?
+  email           String?
+  status          String?  // pipeline stage
+  firstContactDate DateTime? // when first email/call/SMS occurred
+  dealId          String?
+  deal            Deal?    @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([clientId, source])
+  @@unique([clientId, externalId, source])
 }
 
 model Payment {
-  id          String   @id @default(cuid())
-  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  clientId    String
-  externalId  String
-  provider    String   // "stripe"
-  amountCents Int
-  currency    String
-  paidAt      DateTime
-  status      String   // "succeeded" | "failed" | "refunded"
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId      String
+  externalId    String
+  provider      String   // "stripe"
+  amountCents   Int
+  currency      String
+  paidAt        DateTime
+  status        String   // "succeeded" | "failed" | "refunded"
+  subscriptionId String? // for tracking subscription payments
+  isRecurring   Boolean  @default(false) // flag for subscription vs one-time
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([clientId, provider])
+  @@unique([clientId, externalId, provider])
+}
+
+model Deal {
+  id                 String   @id @default(cuid())
+  client             Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId           String
+  externalId         String
+  source             String   // "close"
+  name               String?
+  amount             Float?   // deal value
+  currency           String?  @default("USD")
+  stage              String?  // pipeline stage
+  status             String?  // "open" | "won" | "lost"
+  createdAt          DateTime @default(now())
+  lastStageChangeDate DateTime? // when deal last moved to a new stage
+  updatedAt          DateTime @updatedAt
+  leads              Lead[]
+
+  @@index([clientId, source])
+  @@index([clientId, stage])
+  @@unique([clientId, externalId, source])
 }
 
