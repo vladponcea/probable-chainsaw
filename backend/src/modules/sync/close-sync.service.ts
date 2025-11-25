@@ -208,6 +208,21 @@ export class CloseSyncService {
         },
       });
 
+      // Link the deal to its lead (opportunities in Close have a lead_id)
+      let linkedLeadId: string | null = null;
+      if (deal.lead_id) {
+        const linkedLead = await this.prisma.lead.findFirst({
+          where: {
+            clientId,
+            externalId: deal.lead_id,
+            source: 'close',
+          },
+        });
+        if (linkedLead) {
+          linkedLeadId = linkedLead.id;
+        }
+      }
+
       if (existingDeal) {
         await this.prisma.deal.update({
           where: { id: existingDeal.id },
@@ -221,8 +236,20 @@ export class CloseSyncService {
             updatedAt: new Date(),
           },
         });
+
+        // Update the lead to link it to this deal
+        if (linkedLeadId) {
+          await this.prisma.lead.updateMany({
+            where: {
+              id: linkedLeadId,
+            },
+            data: {
+              dealId: existingDeal.id,
+            },
+          });
+        }
       } else {
-        await this.prisma.deal.create({
+        const newDeal = await this.prisma.deal.create({
           data: {
             clientId,
             externalId: deal.id,
@@ -236,6 +263,18 @@ export class CloseSyncService {
             lastStageChangeDate,
           },
         });
+
+        // Link the lead to this deal
+        if (linkedLeadId) {
+          await this.prisma.lead.updateMany({
+            where: {
+              id: linkedLeadId,
+            },
+            data: {
+              dealId: newDeal.id,
+            },
+          });
+        }
       }
     }
   }
@@ -244,34 +283,60 @@ export class CloseSyncService {
     // Fetch activities (calls, SMS, emails) to determine first contact
     let response;
     try {
+      // Try fetching activities without _fields first to see what we get
       response = await client.get('/activity', {
         params: {
           _limit: 200,
-          _fields: 'id,lead_id,type,date',
         },
       });
     } catch (error: any) {
       // Don't fail the whole sync if activities fail - just log and continue
       this.logger.warn(`Failed to fetch Close activities: ${error.message}`);
+      if (error.response?.data) {
+        this.logger.warn(`Activity API error details: ${JSON.stringify(error.response.data)}`);
+      }
       return;
     }
 
     const activities = response.data?.data || [];
+    this.logger.log(`Fetched ${activities.length} activities for client ${clientId}`);
+
+    if (activities.length === 0) {
+      this.logger.warn(`No activities found for client ${clientId}`);
+      return;
+    }
 
     // Group activities by lead_id and find earliest contact
     const leadFirstContact: Record<string, Date> = {};
 
     for (const activity of activities) {
-      if (
-        !activity.lead_id ||
-        !['call', 'sms', 'email'].includes(activity.type)
-      ) {
+      // Check for lead_id in different possible fields
+      const leadId = activity.lead_id || activity.lead?.id || activity.lead;
+      
+      if (!leadId) {
         continue;
       }
 
-      const activityDate = new Date(activity.date);
-      const leadId = activity.lead_id;
+      // Check activity type - Close uses different type names
+      const activityType = activity.type || activity._type || '';
+      const validTypes = ['call', 'sms', 'email', 'note', 'meeting'];
+      if (!validTypes.some(type => activityType.toLowerCase().includes(type))) {
+        continue;
+      }
 
+      // Get activity date - try different field names
+      const activityDateStr = activity.date || activity.date_created || activity.created || activity._date;
+      if (!activityDateStr) {
+        continue;
+      }
+
+      const activityDate = new Date(activityDateStr);
+      if (isNaN(activityDate.getTime())) {
+        this.logger.warn(`Invalid date for activity ${activity.id}: ${activityDateStr}`);
+        continue;
+      }
+
+      // Track earliest contact for each lead
       if (
         !leadFirstContact[leadId] ||
         activityDate < leadFirstContact[leadId]
@@ -280,11 +345,14 @@ export class CloseSyncService {
       }
     }
 
+    this.logger.log(`Found first contact dates for ${Object.keys(leadFirstContact).length} leads`);
+
     // Update leads with first contact dates
+    let updatedCount = 0;
     for (const [leadExternalId, firstContactDate] of Object.entries(
       leadFirstContact,
     )) {
-      await this.prisma.lead.updateMany({
+      const result = await this.prisma.lead.updateMany({
         where: {
           clientId,
           externalId: leadExternalId,
@@ -294,7 +362,12 @@ export class CloseSyncService {
           firstContactDate,
         },
       });
+      if (result.count > 0) {
+        updatedCount++;
+      }
     }
+
+    this.logger.log(`Updated firstContactDate for ${updatedCount} leads`);
   }
 }
 

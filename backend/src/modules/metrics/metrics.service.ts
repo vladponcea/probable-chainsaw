@@ -22,16 +22,20 @@ export class MetricsService {
   ): Promise<number | null> {
     const dateFilter = this.getDateFilter(timePeriod);
 
-    const leads = await this.prisma.lead.findMany({
+    // Get all leads first to see what we have
+    const allLeads = await this.prisma.lead.findMany({
       where: {
         clientId,
-        firstContactDate: { not: null },
         createdAt: dateFilter,
       },
     });
 
+    // Filter to leads that have firstContactDate set
+    const leadsWithContact = allLeads.filter((lead) => lead.firstContactDate !== null);
+
     // Filter out leads where createdAt is within 1 hour of firstContactDate
-    const validLeads = leads.filter((lead) => {
+    // (these are likely leads created at the same time as first contact)
+    const validLeads = leadsWithContact.filter((lead) => {
       if (!lead.firstContactDate) return false;
       const timeDiff = Math.abs(
         lead.firstContactDate.getTime() - lead.createdAt.getTime(),
@@ -40,7 +44,13 @@ export class MetricsService {
       return timeDiff >= oneHour;
     });
 
-    if (validLeads.length === 0) return null;
+    // Debug logging
+    console.log(`[SpeedToLead] Client: ${clientId}, Period: ${timePeriod}`);
+    console.log(`[SpeedToLead] Total leads: ${allLeads.length}, With firstContactDate: ${leadsWithContact.length}, Valid (>=1h diff): ${validLeads.length}`);
+
+    if (validLeads.length === 0) {
+      return null;
+    }
 
     const totalHours = validLeads.reduce((sum, lead) => {
       if (!lead.firstContactDate) return sum;
@@ -49,7 +59,9 @@ export class MetricsService {
       return sum + diffMs / (1000 * 60 * 60); // Convert to hours
     }, 0);
 
-    return totalHours / validLeads.length;
+    const avgHours = totalHours / validLeads.length;
+    console.log(`[SpeedToLead] Average: ${avgHours.toFixed(2)} hours`);
+    return avgHours;
   }
 
   async getFailedPaymentRate(
@@ -192,37 +204,33 @@ export class MetricsService {
   ): Promise<number | null> {
     const dateFilter = this.getDateFilter(timePeriod);
 
-    const closedDeals = await this.prisma.deal.findMany({
+    // Get total cash collected from Stripe
+    const totalRevenue = await this.getTotalRevenue(clientId, timePeriod);
+
+    // Get count of won deals from Close CRM
+    const wonDealsCount = await this.prisma.deal.count({
       where: {
         clientId,
         status: 'won',
         createdAt: dateFilter,
-        amount: { not: null },
       },
     });
 
-    if (closedDeals.length === 0) return null;
+    if (wonDealsCount === 0) return null;
 
-    const totalValue = closedDeals.reduce(
-      (sum, deal) => sum + (deal.amount || 0),
-      0,
-    );
-
-    return totalValue / closedDeals.length;
+    // Average Deal Value = Total Stripe Revenue / Number of Won Deals
+    return totalRevenue / wonDealsCount;
   }
 
   async getPipelineVelocity(
     clientId: string,
     timePeriod: TimePeriod,
   ): Promise<number | null> {
-    const dateFilter = this.getDateFilter(timePeriod);
-
-    // Get closed deals with associated leads
-    const closedDeals = await this.prisma.deal.findMany({
+    // Get all won deals
+    const allWonDeals = await this.prisma.deal.findMany({
       where: {
         clientId,
         status: 'won',
-        createdAt: dateFilter,
       },
       include: {
         leads: {
@@ -234,17 +242,41 @@ export class MetricsService {
       },
     });
 
-    const validDeals = closedDeals.filter(
-      (deal) => deal.leads.length > 0 && deal.leads[0],
-    );
+    // Debug: log what we found
+    console.log(`[PipelineVelocity Debug] Client: ${clientId}, Total won deals: ${allWonDeals.length}`);
+
+    // Filter deals by when they were marked as won (within time period)
+    const validDeals = allWonDeals.filter((deal) => {
+      if (deal.leads.length === 0 || !deal.leads[0]) {
+        console.log(`[PipelineVelocity Debug] Deal ${deal.id} has no linked leads`);
+        return false;
+      }
+
+      // Use lastStageChangeDate if available, otherwise use updatedAt
+      const wonDate = deal.lastStageChangeDate || deal.updatedAt;
+      
+      // If time period filter is set, check if won date is within period
+      if (timePeriod === '30d') {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        return wonDate >= thirtyDaysAgo;
+      }
+      
+      return true; // All time - include all won deals
+    });
+
+    console.log(`[PipelineVelocity Debug] Valid deals with leads: ${validDeals.length}`);
 
     if (validDeals.length === 0) return null;
 
     const totalDays = validDeals.reduce((sum, deal) => {
       const leadCreated = deal.leads[0].createdAt;
-      const dealCreated = deal.createdAt;
-      const diffMs = dealCreated.getTime() - leadCreated.getTime();
-      return sum + diffMs / (1000 * 60 * 60 * 24); // Convert to days
+      // Use lastStageChangeDate (when marked as won) or updatedAt as fallback
+      const wonDate = deal.lastStageChangeDate || deal.updatedAt;
+      const diffMs = wonDate.getTime() - leadCreated.getTime();
+      const days = diffMs / (1000 * 60 * 60 * 24);
+      console.log(`[PipelineVelocity Debug] Deal ${deal.id}: Lead created ${leadCreated}, Won ${wonDate}, Days: ${days}`);
+      return sum + days;
     }, 0);
 
     return totalDays / validDeals.length;
