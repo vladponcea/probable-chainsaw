@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id                String   @id @default(cuid())
+  email             String?  @unique
+  companyName       String?
+  onboardingToken   String   @unique
+  calendlyConnected Boolean  @default(false)
+  closeConnected    Boolean  @default(false)
+  stripeConnected   Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  integrations ClientIntegration[]
+  bookedCalls  BookedCall[]
+  leads        Lead[]
+  payments     Payment[]
+}
+
+model ClientIntegration {
+  id           String   @id @default(cuid())
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId     String
+  provider     String   // "calendly" | "close" | "stripe" etc.
+  accessToken  String?  // optional for OAuth-style
+  refreshToken String?
+  apiKey       String?  // for API-key style integrations
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([clientId, provider])
+  @@unique([clientId, provider])
+}
+
+model BookedCall {
+  id          String   @id @default(cuid())
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    String
+  externalId  String   // ID from Calendly or CRM
+  source      String   // "calendly" | "crm"
+  scheduledAt DateTime
+  status      String   // "scheduled" | "completed" | "cancelled" | "no_show"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId, source])
+}
+
+model Lead {
+  id         String   @id @default(cuid())
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId   String
+  externalId String
+  source     String   // "close" | "ghl" | "hubspot"
+  firstName  String?
+  lastName   String?
+  email      String?
+  status     String?  // pipeline stage
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([clientId, source])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    String
+  externalId  String
+  provider    String   // "stripe"
+  amountCents Int
+  currency    String
+  paidAt      DateTime
+  status      String   // "succeeded" | "failed" | "refunded"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId, provider])
+}
+
