@@ -617,16 +617,20 @@ export default function OnboardingPage() {
                       Stripe Settings Walkthrough
                     </h3>
                     <p className="text-sm text-gray-600 mt-1 mb-4">
-                      Watch this Loom to see exactly where to pull your Stripe API keys.
+                      Watch this video to see exactly where to pull your Stripe API keys.
                     </p>
                   </div>
-                  <div
-                    className="w-full"
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/2847ae2021df457598058ba3027b89d4" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
-                    }}
-                  />
+                  <div className="w-full" style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+                    <iframe
+                      src="https://www.youtube.com/embed/oqSd3b4Is2Y?si=Dz5tGqkKZ8Vjgus-&modestbranding=1&rel=0"
+                      title="YouTube video player"
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
                 </div>
 
                 {stripeSuccess ? (
