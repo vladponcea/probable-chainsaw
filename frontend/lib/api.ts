@@ -204,3 +204,58 @@ export const mockDataApi = {
   },
 };
 
+export interface StatusMapping {
+  id: string;
+  clientId: string;
+  statusId: string;
+  statusLabel: string;
+  statusType: string | null;
+  showedUp: boolean;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateStatusMappingRequest {
+  showedUp: boolean;
+}
+
+export interface BulkUpdateStatusMappingsRequest {
+  mappings: Array<{ statusId: string; showedUp: boolean }>;
+}
+
+export const statusMappingApi = {
+  getMappings: async (token: string): Promise<StatusMapping[]> => {
+    const response = await api.get(`/dashboard/${token}/status-mappings`);
+    return response.data;
+  },
+
+  syncMappings: async (token: string): Promise<StatusMapping[]> => {
+    const response = await api.post(`/dashboard/${token}/status-mappings/sync`);
+    return response.data;
+  },
+
+  updateMapping: async (
+    token: string,
+    statusId: string,
+    data: UpdateStatusMappingRequest,
+  ): Promise<StatusMapping> => {
+    const response = await api.put(
+      `/dashboard/${token}/status-mappings/${statusId}`,
+      data,
+    );
+    return response.data;
+  },
+
+  bulkUpdateMappings: async (
+    token: string,
+    data: BulkUpdateStatusMappingsRequest,
+  ): Promise<StatusMapping[]> => {
+    const response = await api.put(
+      `/dashboard/${token}/status-mappings`,
+      data,
+    );
+    return response.data;
+  },
+};
+

@@ -26,6 +26,7 @@ model Client {
   leads        Lead[]
   deals        Deal[]
   payments     Payment[]
+  statusMappings OpportunityStatusMapping[]
 }
 
 model ClientIntegration {
@@ -117,5 +118,21 @@ model Deal {
   @@index([clientId, source])
   @@index([clientId, stage])
   @@unique([clientId, externalId, source])
+}
+
+model OpportunityStatusMapping {
+  id          String   @id @default(cuid())
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    String
+  statusId    String   // Close CRM status ID
+  statusLabel String   // Human-readable status name
+  statusType  String?  // "active" | "won" | "lost" from Close
+  showedUp    Boolean  @default(false) // Whether this status means they showed up
+  isDefault   Boolean  @default(false) // Whether this was auto-assigned via smart defaults
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([clientId, statusId])
+  @@index([clientId])
 }
 

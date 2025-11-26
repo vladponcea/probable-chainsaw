@@ -4,6 +4,7 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { SyncModule } from './modules/sync/sync.module';
 import { MockDataModule } from './modules/mock-data/mock-data.module';
+import { StatusMappingModule } from './modules/status-mapping/status-mapping.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -14,6 +15,7 @@ import { PrismaModule } from './prisma/prisma.module';
     DashboardModule,
     SyncModule,
     MockDataModule,
+    StatusMappingModule,
   ],
 })
 export class AppModule {}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { clientsApi, dashboardApi, Client } from '@/lib/api';
 import IntegrationCard from '@/components/integrations/IntegrationCard';
+import StatusMappingEditor from '@/components/integrations/StatusMappingEditor';
 
 export default function IntegrationsPage() {
   const params = useParams();
@@ -112,7 +113,7 @@ export default function IntegrationsPage() {
 
         {/* Integration Cards */}
         {client && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <IntegrationCard
               name="Calendly"
               connected={client.calendlyConnected}
@@ -140,6 +141,13 @@ export default function IntegrationsPage() {
                 await fetchClientData();
               }}
             />
+          </div>
+        )}
+
+        {/* Status Mapping Configuration - Only show if Close CRM is connected */}
+        {client && client.closeConnected && (
+          <div className="mt-8">
+            <StatusMappingEditor token={token} />
           </div>
         )}
 
