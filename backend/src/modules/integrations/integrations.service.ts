@@ -70,10 +70,15 @@ export class IntegrationsService {
   }
 
   async validateStripeApiKey(apiKey: string): Promise<boolean> {
-    // Stub function - in production, this would make an actual API call to Stripe
-    // to validate the API key (e.g., check if it starts with sk_)
-    // For now, just check that it's not empty and starts with sk_
-    return apiKey && apiKey.length > 0 && apiKey.startsWith('sk_');
+    if (!apiKey || apiKey.trim().length === 0) {
+      return false;
+    }
+
+    const trimmedKey = apiKey.trim();
+    const isSecretKey = trimmedKey.startsWith('sk_');
+    const isRestrictedKey = trimmedKey.startsWith('rk_');
+
+    return isSecretKey || isRestrictedKey;
   }
 
   async connectCalendly(token: string, dto: ConnectIntegrationDto) {
@@ -200,10 +205,14 @@ export class IntegrationsService {
     const clientData = await this.clientsService.findByOnboardingToken(token);
     const client = await this.clientsService.findById(clientData.clientId);
 
+    const trimmedKey = dto.apiKey.trim();
+
     // Validate API key
-    const isValid = await this.validateStripeApiKey(dto.apiKey);
+    const isValid = await this.validateStripeApiKey(trimmedKey);
     if (!isValid) {
-      throw new BadRequestException('Invalid Stripe API key');
+      throw new BadRequestException(
+        'Invalid Stripe API key. Please use a secret (sk_) or restricted (rk_) key.',
+      );
     }
 
     // Upsert integration
@@ -215,13 +224,13 @@ export class IntegrationsService {
         },
       },
       update: {
-        apiKey: dto.apiKey,
+        apiKey: trimmedKey,
         updatedAt: new Date(),
       },
       create: {
         clientId: client.id,
         provider: 'stripe',
-        apiKey: dto.apiKey,
+        apiKey: trimmedKey,
       },
     });
 

@@ -271,10 +271,66 @@ export default function OnboardingPage() {
                   </p>
                 </div>
 
-                <VideoSection
-                  title="Calendly Integration Guide"
-                  description="Learn how to find your Calendly API key and connect your account."
-                />
+                {/* Security Notice */}
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                  <div className="flex items-start">
+                    <svg
+                      className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                        API Token Security & Data Access
+                      </h3>
+                      <p className="text-blue-800 mb-3">
+                        <strong>Note:</strong> Calendly does not support restricted API tokens with limited permissions. Personal Access Tokens (PATs) grant access based on your user role. However, we want you to know exactly how we use your token.
+                      </p>
+                      <div className="bg-white rounded-lg p-4 border border-blue-100">
+                        <p className="text-sm font-semibold text-blue-900 mb-2">
+                          We only <strong>READ</strong> the following data:
+                        </p>
+                        <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                          <li><strong>Scheduled Events</strong> - Read your scheduled meetings and their status</li>
+                        </ul>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <p className="text-sm text-blue-700">
+                          <strong>Important:</strong> We <strong>never</strong> create, modify, or delete any data in your Calendly account. We can only read scheduled events to calculate your booking and cancellation metrics.
+                        </p>
+                        <p className="text-sm text-blue-700">
+                          <strong>Security Best Practice:</strong> We recommend creating a dedicated Personal Access Token specifically for this integration. You can monitor its usage and revoke it anytime in Calendly Settings → Integrations → API & Webhooks.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
+                  <div className="px-6 pt-6">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Calendly Scheduling Walkthrough
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1 mb-4">
+                      Watch this quick Loom to see how to review your event types and scheduling setup inside Calendly.
+                    </p>
+                  </div>
+                  <div
+                    className="w-full"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/dbddeb291b274ff1b9616d20a34a9cc6" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
+                    }}
+                  />
+                </div>
 
                 {calendlySuccess ? (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
@@ -311,7 +367,7 @@ export default function OnboardingPage() {
                         type="password"
                         value={calendlyApiKey}
                         onChange={(e) => setCalendlyApiKey(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                         placeholder="Enter your Calendly API key"
                       />
                       {calendlyError && (
@@ -364,10 +420,68 @@ export default function OnboardingPage() {
                   </p>
                 </div>
 
-                <VideoSection
-                  title="Close CRM Integration Guide"
-                  description="Learn how to find your Close API key and connect your account."
-                />
+                {/* Security Notice */}
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                  <div className="flex items-start">
+                    <svg
+                      className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                        API Key Security & Data Access
+                      </h3>
+                      <p className="text-blue-800 mb-3">
+                        <strong>Note:</strong> Close CRM does not support restricted API keys with limited permissions. All API keys provide full account access. However, we want you to know exactly how we use your API key.
+                      </p>
+                      <div className="bg-white rounded-lg p-4 border border-blue-100">
+                        <p className="text-sm font-semibold text-blue-900 mb-2">
+                          We only <strong>READ</strong> the following data:
+                        </p>
+                        <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                          <li><strong>Leads</strong> - Read lead information and status</li>
+                          <li><strong>Opportunities (Deals)</strong> - Read deal values, stages, and status</li>
+                          <li><strong>Activities</strong> - Read calls, emails, and SMS to calculate first contact dates</li>
+                        </ul>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <p className="text-sm text-blue-700">
+                          <strong>Important:</strong> We <strong>never</strong> create, modify, or delete any data in your Close CRM account. We can only read the data needed to calculate your metrics.
+                        </p>
+                        <p className="text-sm text-blue-700">
+                          <strong>Security Best Practice:</strong> We recommend creating a dedicated API key specifically for this integration. You can monitor its usage and revoke it anytime in Close CRM Settings → Developer → API Keys.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
+                  <div className="px-6 pt-6">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Close CRM API Key Walkthrough
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1 mb-4">
+                      Watch this Loom to see exactly where to find your Close CRM API key.
+                    </p>
+                  </div>
+                  <div
+                    className="w-full"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/ddddc95b67af403da31aba438129ba21" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
+                    }}
+                  />
+                </div>
 
                 {closeSuccess ? (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
@@ -404,7 +518,7 @@ export default function OnboardingPage() {
                         type="password"
                         value={closeApiKey}
                         onChange={(e) => setCloseApiKey(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                         placeholder="Enter your Close CRM API key"
                       />
                       {closeError && (
@@ -457,10 +571,63 @@ export default function OnboardingPage() {
                   </p>
                 </div>
 
-                <VideoSection
-                  title="Stripe Integration Guide"
-                  description="Learn how to find your Stripe API key and connect your account."
-                />
+                {/* Security Notice */}
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                  <div className="flex items-start">
+                    <svg
+                      className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                        Secure Your API Key with Restricted Access
+                      </h3>
+                      <p className="text-blue-800 mb-3">
+                        <strong>You can restrict access to your Stripe account</strong> by creating a restricted API key with limited permissions. This is highly recommended for security.
+                      </p>
+                      <div className="bg-white rounded-lg p-4 border border-blue-100">
+                        <p className="text-sm font-semibold text-blue-900 mb-2">
+                          We only require <strong>read-only</strong> access to:
+                        </p>
+                        <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                          <li><strong>Charges</strong> - Read charges</li>
+                          <li><strong>Subscriptions</strong> - Read subscriptions</li>
+                          <li><strong>Invoices</strong> - Read invoices</li>
+                        </ul>
+                      </div>
+                      <p className="text-sm text-blue-700 mt-3">
+                        <strong>Important:</strong> We cannot create, modify, or delete any data in your Stripe account. We can only read the data needed to calculate your metrics.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
+                  <div className="px-6 pt-6">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Stripe Settings Walkthrough
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1 mb-4">
+                      Watch this Loom to see exactly where to pull your Stripe API keys.
+                    </p>
+                  </div>
+                  <div
+                    className="w-full"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/2847ae2021df457598058ba3027b89d4" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
+                    }}
+                  />
+                </div>
 
                 {stripeSuccess ? (
                   <div className="space-y-4">
@@ -564,8 +731,8 @@ export default function OnboardingPage() {
                         type="password"
                         value={stripeApiKey}
                         onChange={(e) => setStripeApiKey(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        placeholder="Enter your Stripe API key (starts with sk_)"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                        placeholder="Enter your Stripe API key (sk_ or rk_ for restricted keys)"
                       />
                       {stripeError && (
                         <p className="mt-2 text-sm text-red-600">
