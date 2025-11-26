@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { clientsApi, dashboardApi, Client, DashboardMetrics, SyncStatus, DateRangeOption } from '@/lib/api';
 import MetricsGrid from '@/components/metrics/MetricsGrid';
 import DateRangePicker from '@/components/metrics/DateRangePicker';
 import SyncStatusComponent from '@/components/metrics/SyncStatus';
-import IntegrationCard from '@/components/integrations/IntegrationCard';
 
 export default function DashboardPage() {
   const params = useParams();
+  const router = useRouter();
   const token = params?.token as string;
 
   const [client, setClient] = useState<Client | null>(null);
@@ -167,7 +167,7 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Dashboard
@@ -176,6 +176,35 @@ export default function DashboardPage() {
                 {client?.companyName || 'Your'} Performance Metrics
               </p>
             </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push(`/dashboard/${token}/integrations`)}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center"
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                Integrations
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-end">
             <div className="max-w-xl w-full">
               <DateRangePicker
                 selectedRange={dateRange}
@@ -211,44 +240,6 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading metrics...</p>
-          </div>
-        )}
-
-        {/* Integration Management */}
-        {client && (
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Integration Settings
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <IntegrationCard
-                name="Calendly"
-                connected={client.calendlyConnected}
-                description="Manage your calendar bookings"
-                onUpdate={async (apiKey: string) => {
-                  await dashboardApi.updateCalendly(token, { apiKey });
-                  await fetchClientData();
-                }}
-              />
-              <IntegrationCard
-                name="Close CRM"
-                connected={client.closeConnected}
-                description="Sync leads and deals"
-                onUpdate={async (apiKey: string) => {
-                  await dashboardApi.updateClose(token, { apiKey });
-                  await fetchClientData();
-                }}
-              />
-              <IntegrationCard
-                name="Stripe"
-                connected={client.stripeConnected}
-                description="Track payments and revenue"
-                onUpdate={async (apiKey: string) => {
-                  await dashboardApi.updateStripe(token, { apiKey });
-                  await fetchClientData();
-                }}
-              />
-            </div>
           </div>
         )}
 
