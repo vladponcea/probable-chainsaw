@@ -1,28 +1,125 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
-export type TimePeriod = 'all' | '30d';
+export type TimePeriod =
+  | 'all'
+  | 'today'
+  | 'yesterday'
+  | 'last7'
+  | 'last30'
+  | '30d'
+  | 'mtd'
+  | 'qtd'
+  | 'ytd'
+  | 'custom';
+
+type DateFilter = {
+  gte?: Date;
+  lte?: Date;
+};
 
 @Injectable()
 export class MetricsService {
   constructor(private prisma: PrismaService) {}
 
-  private getDateFilter(timePeriod: TimePeriod): { gte?: Date } {
-    if (timePeriod === '30d') {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      return { gte: thirtyDaysAgo };
+  private getDateFilter(
+    timePeriod: TimePeriod,
+    customStartDate?: string,
+    customEndDate?: string,
+  ): DateFilter {
+    const now = new Date();
+
+    const startOfDay = (date: Date) => {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    };
+
+    const endOfDay = (date: Date) => {
+      const d = new Date(date);
+      d.setHours(23, 59, 59, 999);
+      return d;
+    };
+
+    const startOfMonth = (date: Date) =>
+      new Date(date.getFullYear(), date.getMonth(), 1);
+
+    const startOfQuarter = (date: Date) => {
+      const quarter = Math.floor(date.getMonth() / 3) * 3;
+      return new Date(date.getFullYear(), quarter, 1);
+    };
+
+    const startOfYear = (date: Date) => new Date(date.getFullYear(), 0, 1);
+
+    let start: Date | undefined;
+    let end: Date | undefined;
+
+    switch (timePeriod) {
+      case 'today':
+        start = startOfDay(now);
+        end = now;
+        break;
+      case 'yesterday': {
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        start = startOfDay(yesterday);
+        end = endOfDay(yesterday);
+        break;
+      }
+      case 'last7': {
+        start = startOfDay(new Date(now));
+        start.setDate(start.getDate() - 7);
+        end = now;
+        break;
+      }
+      case 'last30':
+      case '30d': {
+        start = startOfDay(new Date(now));
+        start.setDate(start.getDate() - 30);
+        end = now;
+        break;
+      }
+      case 'mtd':
+        start = startOfMonth(now);
+        end = now;
+        break;
+      case 'qtd':
+        start = startOfQuarter(now);
+        end = now;
+        break;
+      case 'ytd':
+        start = startOfYear(now);
+        end = now;
+        break;
+      case 'custom':
+        if (customStartDate) {
+          start = startOfDay(new Date(customStartDate));
+        }
+        if (customEndDate) {
+          end = endOfDay(new Date(customEndDate));
+        }
+        break;
+      case 'all':
+      default:
+        return {};
     }
-    return {};
+
+    const filter: DateFilter = {};
+    if (start) filter.gte = start;
+    if (end) filter.lte = end;
+    return filter;
+  }
+
+  private isDateWithinFilter(date: Date, filter: DateFilter): boolean {
+    if (filter.gte && date < filter.gte) return false;
+    if (filter.lte && date > filter.lte) return false;
+    return true;
   }
 
   async getSpeedToLead(
     clientId: string,
-    timePeriod: TimePeriod,
+    dateFilter: DateFilter,
   ): Promise<number | null> {
-    const dateFilter = this.getDateFilter(timePeriod);
-
-    // Get all leads first to see what we have
     const allLeads = await this.prisma.lead.findMany({
       where: {
         clientId,
@@ -30,11 +127,10 @@ export class MetricsService {
       },
     });
 
-    // Filter to leads that have firstContactDate set
-    const leadsWithContact = allLeads.filter((lead) => lead.firstContactDate !== null);
+    const leadsWithContact = allLeads.filter(
+      (lead) => lead.firstContactDate !== null,
+    );
 
-    // Filter out leads where createdAt is within 1 hour of firstContactDate
-    // (these are likely leads created at the same time as first contact)
     const validLeads = leadsWithContact.filter((lead) => {
       if (!lead.firstContactDate) return false;
       const timeDiff = Math.abs(
@@ -44,13 +140,7 @@ export class MetricsService {
       return timeDiff >= oneHour;
     });
 
-    // Debug logging
-    console.log(`[SpeedToLead] Client: ${clientId}, Period: ${timePeriod}`);
-    console.log(`[SpeedToLead] Total leads: ${allLeads.length}, With firstContactDate: ${leadsWithContact.length}, Valid (>=1h diff): ${validLeads.length}`);
-
-    if (validLeads.length === 0) {
-      return null;
-    }
+    if (validLeads.length === 0) return null;
 
     const totalHours = validLeads.reduce((sum, lead) => {
       if (!lead.firstContactDate) return sum;
@@ -59,17 +149,13 @@ export class MetricsService {
       return sum + diffMs / (1000 * 60 * 60); // Convert to hours
     }, 0);
 
-    const avgHours = totalHours / validLeads.length;
-    console.log(`[SpeedToLead] Average: ${avgHours.toFixed(2)} hours`);
-    return avgHours;
+    return totalHours / validLeads.length;
   }
 
   async getFailedPaymentRate(
     clientId: string,
-    timePeriod: TimePeriod,
+    dateFilter: DateFilter,
   ): Promise<number> {
-    const dateFilter = this.getDateFilter(timePeriod);
-
     const [failed, total] = await Promise.all([
       this.prisma.payment.count({
         where: {
@@ -92,10 +178,8 @@ export class MetricsService {
 
   async getBookingRate(
     clientId: string,
-    timePeriod: TimePeriod,
+    dateFilter: DateFilter,
   ): Promise<number | null> {
-    const dateFilter = this.getDateFilter(timePeriod);
-
     const [bookedCalls, totalLeads] = await Promise.all([
       this.prisma.bookedCall.count({
         where: {
@@ -117,10 +201,8 @@ export class MetricsService {
 
   async getCancellationRate(
     clientId: string,
-    timePeriod: TimePeriod,
+    dateFilter: DateFilter,
   ): Promise<number | null> {
-    const dateFilter = this.getDateFilter(timePeriod);
-
     const [cancelled, booked] = await Promise.all([
       this.prisma.bookedCall.count({
         where: {
@@ -157,7 +239,6 @@ export class MetricsService {
       }),
     ]);
 
-    // Deals stuck in same stage for >7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -180,7 +261,6 @@ export class MetricsService {
       },
     });
 
-    // Deals without amount
     const dealsWithoutAmount = await this.prisma.deal.count({
       where: {
         clientId,
@@ -188,26 +268,21 @@ export class MetricsService {
       },
     });
 
-    // Calculate total issues
     const totalIssues = leadsWithoutStatus + stuckDeals + dealsWithoutAmount;
     const totalItems = totalLeads + totalDeals;
 
-    if (totalItems === 0) return 100; // Perfect score if no data
+    if (totalItems === 0) return 100;
 
     const hygieneScore = 100 - (totalIssues / totalItems) * 100;
-    return Math.max(0, Math.min(100, hygieneScore)); // Clamp between 0-100
+    return Math.max(0, Math.min(100, hygieneScore));
   }
 
   async getAverageDealValue(
     clientId: string,
-    timePeriod: TimePeriod,
+    dateFilter: DateFilter,
   ): Promise<number | null> {
-    const dateFilter = this.getDateFilter(timePeriod);
+    const totalRevenue = await this.getTotalRevenue(clientId, dateFilter);
 
-    // Get total cash collected from Stripe
-    const totalRevenue = await this.getTotalRevenue(clientId, timePeriod);
-
-    // Get count of won deals from Close CRM
     const wonDealsCount = await this.prisma.deal.count({
       where: {
         clientId,
@@ -218,16 +293,14 @@ export class MetricsService {
 
     if (wonDealsCount === 0) return null;
 
-    // Average Deal Value = Total Stripe Revenue / Number of Won Deals
     return totalRevenue / wonDealsCount;
   }
 
   async getPipelineVelocity(
     clientId: string,
-    timePeriod: TimePeriod,
+    dateFilter: DateFilter,
   ): Promise<number | null> {
-    // Get all won deals
-    const allWonDeals = await this.prisma.deal.findMany({
+    const wonDeals = await this.prisma.deal.findMany({
       where: {
         clientId,
         status: 'won',
@@ -242,41 +315,22 @@ export class MetricsService {
       },
     });
 
-    // Debug: log what we found
-    console.log(`[PipelineVelocity Debug] Client: ${clientId}, Total won deals: ${allWonDeals.length}`);
-
-    // Filter deals by when they were marked as won (within time period)
-    const validDeals = allWonDeals.filter((deal) => {
+    const validDeals = wonDeals.filter((deal) => {
       if (deal.leads.length === 0 || !deal.leads[0]) {
-        console.log(`[PipelineVelocity Debug] Deal ${deal.id} has no linked leads`);
         return false;
       }
 
-      // Use lastStageChangeDate if available, otherwise use updatedAt
       const wonDate = deal.lastStageChangeDate || deal.updatedAt;
-      
-      // If time period filter is set, check if won date is within period
-      if (timePeriod === '30d') {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        return wonDate >= thirtyDaysAgo;
-      }
-      
-      return true; // All time - include all won deals
+      return this.isDateWithinFilter(wonDate, dateFilter);
     });
-
-    console.log(`[PipelineVelocity Debug] Valid deals with leads: ${validDeals.length}`);
 
     if (validDeals.length === 0) return null;
 
     const totalDays = validDeals.reduce((sum, deal) => {
       const leadCreated = deal.leads[0].createdAt;
-      // Use lastStageChangeDate (when marked as won) or updatedAt as fallback
       const wonDate = deal.lastStageChangeDate || deal.updatedAt;
       const diffMs = wonDate.getTime() - leadCreated.getTime();
-      const days = diffMs / (1000 * 60 * 60 * 24);
-      console.log(`[PipelineVelocity Debug] Deal ${deal.id}: Lead created ${leadCreated}, Won ${wonDate}, Days: ${days}`);
-      return sum + days;
+      return sum + diffMs / (1000 * 60 * 60 * 24);
     }, 0);
 
     return totalDays / validDeals.length;
@@ -284,10 +338,8 @@ export class MetricsService {
 
   async getTotalRevenue(
     clientId: string,
-    timePeriod: TimePeriod,
+    dateFilter: DateFilter,
   ): Promise<number> {
-    const dateFilter = this.getDateFilter(timePeriod);
-
     const payments = await this.prisma.payment.findMany({
       where: {
         clientId,
@@ -296,7 +348,6 @@ export class MetricsService {
       },
     });
 
-    // Convert cents to dollars and sum
     return payments.reduce((sum, payment) => {
       return sum + payment.amountCents / 100;
     }, 0);
@@ -305,6 +356,8 @@ export class MetricsService {
   async getAllMetrics(
     clientId: string,
     timePeriod: TimePeriod,
+    customStartDate?: string,
+    customEndDate?: string,
   ): Promise<{
     speedToLead: number | null;
     failedPaymentRate: number;
@@ -315,6 +368,12 @@ export class MetricsService {
     pipelineVelocity: number | null;
     totalRevenue: number;
   }> {
+    const dateFilter = this.getDateFilter(
+      timePeriod,
+      customStartDate,
+      customEndDate,
+    );
+
     const [
       speedToLead,
       failedPaymentRate,
@@ -325,14 +384,14 @@ export class MetricsService {
       pipelineVelocity,
       totalRevenue,
     ] = await Promise.all([
-      this.getSpeedToLead(clientId, timePeriod),
-      this.getFailedPaymentRate(clientId, timePeriod),
-      this.getBookingRate(clientId, timePeriod),
-      this.getCancellationRate(clientId, timePeriod),
+      this.getSpeedToLead(clientId, dateFilter),
+      this.getFailedPaymentRate(clientId, dateFilter),
+      this.getBookingRate(clientId, dateFilter),
+      this.getCancellationRate(clientId, dateFilter),
       this.getCRMHygiene(clientId),
-      this.getAverageDealValue(clientId, timePeriod),
-      this.getPipelineVelocity(clientId, timePeriod),
-      this.getTotalRevenue(clientId, timePeriod),
+      this.getAverageDealValue(clientId, dateFilter),
+      this.getPipelineVelocity(clientId, dateFilter),
+      this.getTotalRevenue(clientId, dateFilter),
     ]);
 
     return {

@@ -14,11 +14,18 @@ export class DashboardService {
     private integrationsService: IntegrationsService,
   ) {}
 
-  async getMetrics(token: string, period: TimePeriod = 'all') {
+  async getMetrics(
+    token: string,
+    period: TimePeriod = 'mtd',
+    startDate?: string,
+    endDate?: string,
+  ) {
     const clientData = await this.clientsService.findByOnboardingToken(token);
     const metrics = await this.metricsService.getAllMetrics(
       clientData.clientId,
       period,
+      startDate,
+      endDate,
     );
 
     return metrics;

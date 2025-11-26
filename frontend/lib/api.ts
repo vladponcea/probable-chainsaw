@@ -123,13 +123,41 @@ export interface SyncStatus {
   status: string;
 }
 
+export type DateRangeOption =
+  | 'all'
+  | 'today'
+  | 'yesterday'
+  | 'last7'
+  | 'last30'
+  | 'mtd'
+  | 'qtd'
+  | 'ytd'
+  | 'custom';
+
+export interface MetricsQueryOptions {
+  period?: DateRangeOption;
+  startDate?: string;
+  endDate?: string;
+}
+
 export const dashboardApi = {
   getMetrics: async (
     token: string,
-    period: 'all' | '30d' = 'all',
+    options: MetricsQueryOptions = {},
   ): Promise<DashboardMetrics> => {
+    const params: Record<string, string> = {
+      period: options.period ?? 'mtd',
+    };
+
+    if (options.startDate) {
+      params.startDate = options.startDate;
+    }
+    if (options.endDate) {
+      params.endDate = options.endDate;
+    }
+
     const response = await api.get(`/dashboard/${token}/metrics`, {
-      params: { period },
+      params,
     });
     return response.data;
   },

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { clientsApi, dashboardApi, Client, DashboardMetrics, SyncStatus } from '@/lib/api';
+import { clientsApi, dashboardApi, Client, DashboardMetrics, SyncStatus, DateRangeOption } from '@/lib/api';
 import MetricsGrid from '@/components/metrics/MetricsGrid';
-import TimePeriodToggle from '@/components/metrics/TimePeriodToggle';
+import DateRangePicker from '@/components/metrics/DateRangePicker';
 import SyncStatusComponent from '@/components/metrics/SyncStatus';
 import IntegrationCard from '@/components/integrations/IntegrationCard';
 
@@ -15,7 +15,11 @@ export default function DashboardPage() {
   const [client, setClient] = useState<Client | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
-  const [period, setPeriod] = useState<'all' | '30d'>('all');
+  const [dateRange, setDateRange] = useState<DateRangeOption>('mtd');
+  const [customRange, setCustomRange] = useState<{ startDate: string; endDate: string }>({
+    startDate: '',
+    endDate: '',
+  });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,10 +27,21 @@ export default function DashboardPage() {
   useEffect(() => {
     if (token) {
       fetchClientData();
-      fetchMetrics();
       fetchSyncStatus();
     }
-  }, [token, period]);
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    if (
+      dateRange === 'custom' &&
+      (!customRange.startDate || !customRange.endDate)
+    ) {
+      setMetrics(null);
+      return;
+    }
+    fetchMetrics();
+  }, [token, dateRange, customRange.startDate, customRange.endDate]);
 
   const fetchClientData = async () => {
     try {
@@ -43,7 +58,22 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      const metricsData = await dashboardApi.getMetrics(token, period);
+      if (!token) return;
+      if (
+        dateRange === 'custom' &&
+        (!customRange.startDate || !customRange.endDate)
+      ) {
+        return;
+      }
+      const metricsData = await dashboardApi.getMetrics(token, {
+        period: dateRange,
+        ...(dateRange === 'custom'
+          ? {
+              startDate: customRange.startDate,
+              endDate: customRange.endDate,
+            }
+          : {}),
+      });
       setMetrics(metricsData);
     } catch (err: any) {
       setError(
@@ -82,6 +112,24 @@ export default function DashboardPage() {
       alert(errorMsg);
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleDateRangeChange = (
+    range: DateRangeOption,
+    options?: { startDate?: string; endDate?: string },
+  ) => {
+    setDateRange(range);
+    if (range === 'custom') {
+      setCustomRange({
+        startDate: options?.startDate || '',
+        endDate: options?.endDate || '',
+      });
+      if (!options?.startDate || !options?.endDate) {
+        setMetrics(null);
+      }
+    } else {
+      setCustomRange({ startDate: '', endDate: '' });
     }
   };
 
@@ -128,7 +176,14 @@ export default function DashboardPage() {
                 {client?.companyName || 'Your'} Performance Metrics
               </p>
             </div>
-            <TimePeriodToggle period={period} onChange={setPeriod} />
+            <div className="max-w-xl w-full">
+              <DateRangePicker
+                selectedRange={dateRange}
+                customStartDate={customRange.startDate}
+                customEndDate={customRange.endDate}
+                onChange={handleDateRangeChange}
+              />
+            </div>
           </div>
         </div>
 
@@ -145,7 +200,12 @@ export default function DashboardPage() {
         )}
 
         {/* Metrics Grid */}
-        {metrics ? (
+        {dateRange === 'custom' &&
+        (!customRange.startDate || !customRange.endDate) ? (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-600">
+            Select both a start and end date to view metrics.
+          </div>
+        ) : metrics ? (
           <MetricsGrid metrics={metrics} isLoading={loading} />
         ) : (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
