@@ -112,6 +112,8 @@ export interface DashboardMetrics {
   failedPaymentRate: number;
   bookingRate: number | null;
   cancellationRate: number | null;
+  showUpRate: number | null;
+  closeRate: number | null;
   crmHygiene: number;
   averageDealValue: number | null;
   pipelineVelocity: number | null;

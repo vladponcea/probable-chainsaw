@@ -40,6 +40,20 @@ export default function MetricsGrid({ metrics, isLoading }: MetricsGridProps) {
         isLoading={isLoading}
       />
       <MetricCard
+        title="Show Up Rate"
+        value={metrics.showUpRate}
+        unit="%"
+        subtitle="Customers who showed up / Total scheduled calls"
+        isLoading={isLoading}
+      />
+      <MetricCard
+        title="Close Rate"
+        value={metrics.closeRate}
+        unit="%"
+        subtitle="Won deals / Show ups"
+        isLoading={isLoading}
+      />
+      <MetricCard
         title="CRM Hygiene"
         value={metrics.crmHygiene}
         unit="%"
