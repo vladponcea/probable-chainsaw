@@ -479,12 +479,78 @@ export class MetricsService {
     averageDealValue: number | null;
     pipelineVelocity: number | null;
     totalRevenue: number;
+    totalLeads: number;
+    bookedCalls: number;
+    showUps: number;
+    wonDeals: number;
   }> {
     const dateFilter = this.getDateFilter(
       timePeriod,
       customStartDate,
       customEndDate,
     );
+
+    // Get raw counts needed for calculations
+    const [totalLeads, bookedCallsData, statusMappings, dealsData] = await Promise.all([
+      this.prisma.lead.count({
+        where: {
+          clientId,
+          createdAt: dateFilter,
+        },
+      }),
+      this.prisma.bookedCall.findMany({
+        where: {
+          clientId,
+          source: 'calendly',
+          status: {
+            not: 'cancelled',
+          },
+          scheduledAt: dateFilter,
+        },
+      }),
+      this.prisma.opportunityStatusMapping.findMany({
+        where: {
+          clientId,
+          showedUp: true,
+        },
+      }),
+      this.prisma.deal.findMany({
+        where: {
+          clientId,
+          source: 'close',
+          OR: [
+            { createdAt: dateFilter },
+            { lastStageChangeDate: dateFilter },
+          ],
+        },
+      }),
+    ]);
+
+    const bookedCalls = bookedCallsData.length;
+    const showedUpStatusIds = new Set(
+      statusMappings.map((m) => m.statusId),
+    );
+
+    // Calculate show ups (matching booked calls to deals with showedUp status)
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    const showUps = bookedCallsData.filter((call) => {
+      const callDate = call.scheduledAt.getTime();
+      return dealsData.some((deal) => {
+        if (!deal.stage || !showedUpStatusIds.has(deal.stage)) {
+          return false;
+        }
+        const dealDate = deal.lastStageChangeDate
+          ? deal.lastStageChangeDate.getTime()
+          : deal.createdAt.getTime();
+        const dateDiff = Math.abs(callDate - dealDate);
+        return dateDiff <= sevenDaysInMs;
+      });
+    }).length;
+
+    // Calculate won deals
+    const wonDeals = dealsData.filter((deal) => {
+      return deal.status === 'won';
+    }).length;
 
     const [
       speedToLead,
@@ -521,6 +587,10 @@ export class MetricsService {
       averageDealValue,
       pipelineVelocity,
       totalRevenue,
+      totalLeads,
+      bookedCalls,
+      showUps,
+      wonDeals,
     };
   }
 }

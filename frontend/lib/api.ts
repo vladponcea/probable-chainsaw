@@ -118,6 +118,10 @@ export interface DashboardMetrics {
   averageDealValue: number | null;
   pipelineVelocity: number | null;
   totalRevenue: number;
+  totalLeads: number;
+  bookedCalls: number;
+  showUps: number;
+  wonDeals: number;
 }
 
 export interface SyncStatus {
