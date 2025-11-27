@@ -10,6 +10,16 @@ interface MetricsGridProps {
 }
 
 export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: MetricsGridProps) {
+  const checkTarget = (
+    value: number | null,
+    target: number,
+    operator: 'less' | 'greater'
+  ): 'met' | 'below' | null => {
+    if (value === null) return null;
+    const isMet = operator === 'less' ? value < target : value > target;
+    return isMet ? 'met' : 'below';
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <MetricCard
@@ -32,6 +42,12 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
         unit="hours"
         subtitle="Average time from lead creation to first contact"
         isLoading={isLoading}
+        target="< 2min"
+        targetStatus={
+          metrics.speedToLead !== null
+            ? checkTarget(metrics.speedToLead * 60, 2, 'less') // Convert hours to minutes
+            : null
+        }
       />
       <MetricCard
         title="Failed Payment Amount (Yearly)"
@@ -46,6 +62,8 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
         unit="%"
         subtitle="Booked calls / Total leads"
         isLoading={isLoading}
+        target="> 15%"
+        targetStatus={checkTarget(metrics.bookingRate, 15, 'greater')}
       />
       <MetricCard
         title="Cancellation Rate"
@@ -53,6 +71,8 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
         unit="%"
         subtitle="Cancelled calls / Booked calls"
         isLoading={isLoading}
+        target="< 20%"
+        targetStatus={checkTarget(metrics.cancellationRate, 20, 'less')}
       />
       <MetricCard
         title="Show Up Rate"
@@ -60,6 +80,8 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
         unit="%"
         subtitle="Customers who showed up / Total scheduled calls"
         isLoading={isLoading}
+        target="> 60%"
+        targetStatus={checkTarget(metrics.showUpRate, 60, 'greater')}
       />
       <MetricCard
         title="Close Rate"
@@ -67,6 +89,8 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
         unit="%"
         subtitle="Won deals / Show ups"
         isLoading={isLoading}
+        target="> 35%"
+        targetStatus={checkTarget(metrics.closeRate, 35, 'greater')}
       />
       <MetricCard
         title="CRM Hygiene"
@@ -74,6 +98,8 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
         unit="%"
         subtitle="Data quality score"
         isLoading={isLoading}
+        target="> 80%"
+        targetStatus={checkTarget(metrics.crmHygiene, 80, 'greater')}
       />
       <MetricCard
         title="Average Deal Value"

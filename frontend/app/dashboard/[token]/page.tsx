@@ -7,7 +7,6 @@ import MetricsGrid from '@/components/metrics/MetricsGrid';
 import DateRangePicker from '@/components/metrics/DateRangePicker';
 import SyncStatusComponent from '@/components/metrics/SyncStatus';
 import MetricsComparison from '@/components/metrics/MetricsComparison';
-import BaselineKPIs from '@/components/metrics/BaselineKPIs';
 
 export default function DashboardPage() {
   const params = useParams();
@@ -324,6 +323,14 @@ export default function DashboardPage() {
             <p className="text-lg font-medium">Select a Date Range</p>
             <p className="text-sm mt-2">Please select both a start and end date to view metrics.</p>
           </div>
+        ) : loading ? (
+          <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-800 p-20 text-center">
+            <div className="relative w-16 h-16 mx-auto">
+              <div className="absolute inset-0 border-4 border-slate-700 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-primary-500 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <p className="mt-6 text-slate-400 font-medium animate-pulse">Loading dashboard metrics...</p>
+          </div>
         ) : metrics ? (
           <div className="animate-slide-up space-y-8">
             <MetricsGrid
@@ -331,7 +338,6 @@ export default function DashboardPage() {
               isLoading={loading}
               avgLeadsPerMonth={avgLeadsPerMonth}
             />
-            <BaselineKPIs metrics={metrics} />
             <MetricsComparison
               metrics={metrics}
               avgLeadsPerMonth={avgLeadsPerMonth}
@@ -339,11 +345,13 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-800 p-20 text-center">
-            <div className="relative w-16 h-16 mx-auto">
-              <div className="absolute inset-0 border-4 border-slate-700 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-primary-500 rounded-full border-t-transparent animate-spin"></div>
+            <div className="text-rose-500 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
-            <p className="mt-6 text-slate-400 font-medium animate-pulse">Loading dashboard metrics...</p>
+            <h3 className="text-xl font-bold text-white mb-2">Unable to Load Metrics</h3>
+            <p className="text-slate-400">{error || 'No data available for this period.'}</p>
           </div>
         )}
 
