@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { clientsApi, dashboardApi, Client, DashboardMetrics, SyncStatus, DateRangeOption } from '@/lib/api';
 import MetricsGrid from '@/components/metrics/MetricsGrid';
@@ -22,6 +22,7 @@ export default function DashboardPage() {
     endDate: '',
   });
   const [loading, setLoading] = useState(true);
+  const hasSyncedRef = useRef(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +30,12 @@ export default function DashboardPage() {
     if (token) {
       fetchClientData();
       fetchSyncStatus();
+
+      // Auto-sync on first load
+      if (!hasSyncedRef.current) {
+        hasSyncedRef.current = true;
+        handleSync(true); // Pass true to indicate auto-sync
+      }
     }
   }, [token]);
 
@@ -95,22 +102,27 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSync = async () => {
+  const handleSync = async (silent = false) => {
     try {
       setSyncing(true);
       const result = await dashboardApi.triggerSync(token);
       // Refresh metrics and sync status after sync
       await Promise.all([fetchMetrics(), fetchSyncStatus()]);
 
-      // Show success/partial success message
-      if (result.success) {
-        // Success message is already shown in sync status
-      } else {
-        alert(result.message || 'Sync completed with errors');
+      // Show success/partial success message only if not silent
+      if (!silent) {
+        if (result.success) {
+          // Success message is already shown in sync status
+        } else {
+          alert(result.message || 'Sync completed with errors');
+        }
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || err.message || 'Failed to sync data';
-      alert(errorMsg);
+      if (!silent) {
+        alert(errorMsg);
+      }
+      console.error('Sync error:', err);
     } finally {
       setSyncing(false);
     }
