@@ -15,6 +15,7 @@ export interface Client {
   companyName: string | null;
   calendlyConnected: boolean;
   closeConnected: boolean;
+  ghlConnected: boolean;
   stripeConnected: boolean;
 }
 
@@ -90,6 +91,17 @@ export const integrationsApi = {
   ): Promise<ConnectIntegrationResponse> => {
     const response = await api.post(
       `/onboarding/${token}/integrations/close`,
+      data,
+    );
+    return response.data;
+  },
+
+  connectGhl: async (
+    token: string,
+    data: ConnectIntegrationRequest,
+  ): Promise<ConnectIntegrationResponse> => {
+    const response = await api.post(
+      `/onboarding/${token}/integrations/ghl`,
       data,
     );
     return response.data;

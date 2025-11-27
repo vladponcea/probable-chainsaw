@@ -28,7 +28,14 @@ export default function OnboardingPage() {
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [calendlySuccess, setCalendlySuccess] = useState(false);
   const [closeSuccess, setCloseSuccess] = useState(false);
+  const [ghlSuccess, setGhlSuccess] = useState(false);
   const [stripeSuccess, setStripeSuccess] = useState(false);
+
+  // CRM Selection
+  const [selectedCrm, setSelectedCrm] = useState<'close' | 'ghl'>('close');
+  const [ghlApiKey, setGhlApiKey] = useState('');
+  const [ghlLoading, setGhlLoading] = useState(false);
+  const [ghlError, setGhlError] = useState<string | null>(null);
 
   useEffect(() => {
     if (token) {
@@ -47,12 +54,20 @@ export default function OnboardingPage() {
       if (clientData.stripeConnected) {
         setCurrentStep(4);
         setCalendlySuccess(true);
+        setCalendlySuccess(true);
         setCloseSuccess(true);
+        setGhlSuccess(true);
         setStripeSuccess(true);
       } else if (clientData.closeConnected) {
         setCurrentStep(4);
         setCalendlySuccess(true);
         setCloseSuccess(true);
+        setSelectedCrm('close');
+      } else if (clientData.ghlConnected) {
+        setCurrentStep(4);
+        setCalendlySuccess(true);
+        setGhlSuccess(true);
+        setSelectedCrm('ghl');
       } else if (clientData.calendlyConnected) {
         setCurrentStep(3);
         setCalendlySuccess(true);
@@ -114,6 +129,30 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleGhlConnect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ghlApiKey.trim()) {
+      setGhlError('Please enter a GoHighLevel API key');
+      return;
+    }
+
+    try {
+      setGhlLoading(true);
+      setGhlError(null);
+      await integrationsApi.connectGhl(token, { apiKey: ghlApiKey });
+      setGhlSuccess(true);
+      setGhlApiKey('');
+      // Refresh client data to get updated flags
+      await fetchClientData();
+    } catch (err: any) {
+      setGhlError(
+        err.response?.data?.message || 'Failed to connect GoHighLevel',
+      );
+    } finally {
+      setGhlLoading(false);
+    }
+  };
+
   const handleStripeConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripeApiKey.trim()) {
@@ -147,13 +186,13 @@ export default function OnboardingPage() {
     } else if (
       step === 3 &&
       (currentStep >= 3 ||
-        (client?.calendlyConnected && client?.closeConnected))
+        (client?.calendlyConnected && (client?.closeConnected || client?.ghlConnected)))
     ) {
       setCurrentStep(3);
     } else if (
       step === 4 &&
       (currentStep >= 4 ||
-        (client?.calendlyConnected && client?.closeConnected && client?.stripeConnected))
+        (client?.calendlyConnected && (client?.closeConnected || client?.ghlConnected) && client?.stripeConnected))
     ) {
       setCurrentStep(4);
     }
@@ -212,7 +251,7 @@ export default function OnboardingPage() {
           <Stepper
             currentStep={currentStep}
             calendlyConnected={client?.calendlyConnected || false}
-            closeConnected={client?.closeConnected || false}
+            closeConnected={client?.closeConnected || client?.ghlConnected || false}
             stripeConnected={client?.stripeConnected || false}
             onStepClick={handleStepClick}
           />
@@ -405,136 +444,265 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Step 3: Close CRM Integration */}
+            {/* Step 3: CRM Integration */}
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                    Step 3 – Connect Close CRM
+                    Step 3 – Connect CRM
                   </h2>
                   <p className="text-gray-600 mb-6">
-                    Connect your Close CRM to sync leads, pipeline data, and
+                    Connect your CRM to sync leads, pipeline data, and
                     CRM hygiene metrics. This enables us to track your sales
                     funnel, conversion rates, and identify opportunities for
                     improvement.
                   </p>
-                </div>
 
-                {/* Security Notice */}
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
-                  <div className="flex items-start">
-                    <svg
-                      className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Choose your CRM
+                    </label>
+                    <select
+                      value={selectedCrm}
+                      onChange={(e) => setSelectedCrm(e.target.value as 'close' | 'ghl')}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                      disabled={closeSuccess || ghlSuccess}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      <option value="close">Close CRM</option>
+                      <option value="ghl">GoHighLevel</option>
+                    </select>
+                  </div>
+                </div>
+
+                {selectedCrm === 'close' ? (
+                  <>
+                    {/* Security Notice for Close */}
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                      <div className="flex items-start">
+                        <svg
+                          className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                            API Key Security & Data Access
+                          </h3>
+                          <p className="text-blue-800 mb-3">
+                            <strong>Note:</strong> Close CRM does not support restricted API keys with limited permissions. All API keys provide full account access. However, we want you to know exactly how we use your API key.
+                          </p>
+                          <div className="bg-white rounded-lg p-4 border border-blue-100">
+                            <p className="text-sm font-semibold text-blue-900 mb-2">
+                              We only <strong>READ</strong> the following data:
+                            </p>
+                            <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                              <li><strong>Leads</strong> - Read lead information and status</li>
+                              <li><strong>Opportunities (Deals)</strong> - Read deal values, stages, and status</li>
+                              <li><strong>Activities</strong> - Read calls, emails, and SMS to calculate first contact dates</li>
+                            </ul>
+                          </div>
+                          <div className="mt-3 space-y-2">
+                            <p className="text-sm text-blue-700">
+                              <strong>Important:</strong> We <strong>never</strong> create, modify, or delete any data in your Close CRM account. We can only read the data needed to calculate your metrics.
+                            </p>
+                            <p className="text-sm text-blue-700">
+                              <strong>Security Best Practice:</strong> We recommend creating a dedicated API key specifically for this integration. You can monitor its usage and revoke it anytime in Close CRM Settings → Developer → API Keys.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
+                      <div className="px-6 pt-6">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Close CRM API Key Walkthrough
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1 mb-4">
+                          Watch this Loom to see exactly where to find your Close CRM API key.
+                        </p>
+                      </div>
+                      <div
+                        className="w-full"
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/ddddc95b67af403da31aba438129ba21" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
+                        }}
                       />
-                    </svg>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-blue-900 mb-3">
-                        API Key Security & Data Access
-                      </h3>
-                      <p className="text-blue-800 mb-3">
-                        <strong>Note:</strong> Close CRM does not support restricted API keys with limited permissions. All API keys provide full account access. However, we want you to know exactly how we use your API key.
-                      </p>
-                      <div className="bg-white rounded-lg p-4 border border-blue-100">
-                        <p className="text-sm font-semibold text-blue-900 mb-2">
-                          We only <strong>READ</strong> the following data:
-                        </p>
-                        <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
-                          <li><strong>Leads</strong> - Read lead information and status</li>
-                          <li><strong>Opportunities (Deals)</strong> - Read deal values, stages, and status</li>
-                          <li><strong>Activities</strong> - Read calls, emails, and SMS to calculate first contact dates</li>
-                        </ul>
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        <p className="text-sm text-blue-700">
-                          <strong>Important:</strong> We <strong>never</strong> create, modify, or delete any data in your Close CRM account. We can only read the data needed to calculate your metrics.
-                        </p>
-                        <p className="text-sm text-blue-700">
-                          <strong>Security Best Practice:</strong> We recommend creating a dedicated API key specifically for this integration. You can monitor its usage and revoke it anytime in Close CRM Settings → Developer → API Keys.
-                        </p>
-                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
-                  <div className="px-6 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Close CRM API Key Walkthrough
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1 mb-4">
-                      Watch this Loom to see exactly where to find your Close CRM API key.
-                    </p>
-                  </div>
-                  <div
-                    className="w-full"
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/ddddc95b67af403da31aba438129ba21" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
-                    }}
-                  />
-                </div>
-
-                {closeSuccess ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-6 h-6 text-green-600 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <span className="text-green-800 font-semibold">
-                        Close CRM connected successfully!
-                      </span>
-                    </div>
-                  </div>
+                    {closeSuccess ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-center">
+                          <svg
+                            className="w-6 h-6 text-green-600 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                          <span className="text-green-800 font-semibold">
+                            Close CRM connected successfully!
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleCloseConnect} className="space-y-4">
+                        <div>
+                          <label
+                            htmlFor="close-key"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            Close CRM API key
+                          </label>
+                          <input
+                            id="close-key"
+                            type="password"
+                            value={closeApiKey}
+                            onChange={(e) => setCloseApiKey(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                            placeholder="Enter your Close CRM API key"
+                          />
+                          {closeError && (
+                            <p className="mt-2 text-sm text-red-600">
+                              {closeError}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={closeLoading}
+                          className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {closeLoading ? 'Connecting...' : 'Connect Close CRM'}
+                        </button>
+                      </form>
+                    )}
+                  </>
                 ) : (
-                  <form onSubmit={handleCloseConnect} className="space-y-4">
-                    <div>
-                      <label
-                        htmlFor="close-key"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Close CRM API key
-                      </label>
-                      <input
-                        id="close-key"
-                        type="password"
-                        value={closeApiKey}
-                        onChange={(e) => setCloseApiKey(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                        placeholder="Enter your Close CRM API key"
-                      />
-                      {closeError && (
-                        <p className="mt-2 text-sm text-red-600">
-                          {closeError}
-                        </p>
-                      )}
+                  <>
+                    {/* Security Notice for GHL */}
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                      <div className="flex items-start">
+                        <svg
+                          className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                            API Key Security & Data Access
+                          </h3>
+                          <p className="text-blue-800 mb-3">
+                            <strong>Note:</strong> We use your GoHighLevel API Key (V2) to access your account data.
+                          </p>
+                          <div className="bg-white rounded-lg p-4 border border-blue-100">
+                            <p className="text-sm font-semibold text-blue-900 mb-2">
+                              We only <strong>READ</strong> the following data:
+                            </p>
+                            <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                              <li><strong>Contacts</strong> - Read contact information</li>
+                              <li><strong>Opportunities</strong> - Read opportunity values, stages, and status</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      type="submit"
-                      disabled={closeLoading}
-                      className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {closeLoading ? 'Connecting...' : 'Connect Close CRM'}
-                    </button>
-                  </form>
+
+                    <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
+                      <div className="px-6 pt-6">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          GoHighLevel API Key Walkthrough
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1 mb-4">
+                          Watch this Loom to see exactly where to find your GoHighLevel API Key.
+                        </p>
+                      </div>
+                      <div
+                        className="w-full"
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/ddddc95b67af403da31aba438129ba21" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
+                        }}
+                      />
+                    </div>
+
+                    {ghlSuccess ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-center">
+                          <svg
+                            className="w-6 h-6 text-green-600 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                          <span className="text-green-800 font-semibold">
+                            GoHighLevel connected successfully!
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleGhlConnect} className="space-y-4">
+                        <div>
+                          <label
+                            htmlFor="ghl-key"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            GoHighLevel API Key (V2)
+                          </label>
+                          <input
+                            id="ghl-key"
+                            type="password"
+                            value={ghlApiKey}
+                            onChange={(e) => setGhlApiKey(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                            placeholder="Enter your GHL API Key"
+                          />
+                          {ghlError && (
+                            <p className="mt-2 text-sm text-red-600">
+                              {ghlError}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={ghlLoading}
+                          className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {ghlLoading ? 'Connecting...' : 'Connect GoHighLevel'}
+                        </button>
+                      </form>
+                    )}
+                  </>
                 )}
 
                 <div className="flex justify-between">
@@ -544,7 +712,7 @@ export default function OnboardingPage() {
                   >
                     Back
                   </button>
-                  {closeSuccess && (
+                  {(closeSuccess || ghlSuccess) && (
                     <button
                       onClick={() => setCurrentStep(4)}
                       className="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
@@ -692,6 +860,22 @@ export default function OnboardingPage() {
                             />
                           </svg>
                           Close connected
+                        </div>
+                        <div className="flex items-center text-green-700">
+                          <svg
+                            className="w-5 h-5 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                          {client?.ghlConnected ? 'GoHighLevel connected' : 'Close connected'}
                         </div>
                         <div className="flex items-center text-green-700">
                           <svg

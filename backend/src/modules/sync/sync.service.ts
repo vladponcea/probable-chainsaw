@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CalendlySyncService } from './calendly-sync.service';
 import { CloseSyncService } from './close-sync.service';
+import { GhlSyncService } from './ghl-sync.service';
 import { StripeSyncService } from './stripe-sync.service';
 
 @Injectable()
@@ -15,8 +16,9 @@ export class SyncService {
     private prisma: PrismaService,
     private calendlySync: CalendlySyncService,
     private closeSync: CloseSyncService,
+    private ghlSync: GhlSyncService,
     private stripeSync: StripeSyncService,
-  ) {}
+  ) { }
 
   @Cron(CronExpression.EVERY_HOUR)
   async syncAllClients() {
@@ -27,6 +29,7 @@ export class SyncService {
         OR: [
           { calendlyConnected: true },
           { closeConnected: true },
+          { ghlConnected: true },
           { stripeConnected: true },
         ],
       },
@@ -80,6 +83,16 @@ export class SyncService {
       }
     }
 
+    if (client.ghlConnected) {
+      try {
+        await this.ghlSync.syncClientGhl(clientId);
+      } catch (error: any) {
+        const errorMsg = `GHL CRM: ${error.message}`;
+        errors.push(errorMsg);
+        this.logger.error(`Error syncing GHL CRM for client ${clientId}: ${error.message}`);
+      }
+    }
+
     if (client.stripeConnected) {
       try {
         await this.stripeSync.syncClientStripe(clientId);
@@ -92,8 +105,8 @@ export class SyncService {
 
     // Update sync status
     if (errors.length > 0) {
-      const statusMsg = errors.length === 1 
-        ? `error: ${errors[0]}` 
+      const statusMsg = errors.length === 1
+        ? `error: ${errors[0]}`
         : `errors: ${errors.join('; ')}`;
       this.syncStatus.set(clientId, {
         lastSync: new Date(),

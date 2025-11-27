@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { SyncService } from './sync.service';
 import { CalendlySyncService } from './calendly-sync.service';
 import { CloseSyncService } from './close-sync.service';
+import { GhlSyncService } from './ghl-sync.service';
 import { StripeSyncService } from './stripe-sync.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
@@ -12,9 +13,10 @@ import { PrismaModule } from '../../prisma/prisma.module';
     SyncService,
     CalendlySyncService,
     CloseSyncService,
+    GhlSyncService,
     StripeSyncService,
   ],
   exports: [SyncService],
 })
-export class SyncModule {}
+export class SyncModule { }
 

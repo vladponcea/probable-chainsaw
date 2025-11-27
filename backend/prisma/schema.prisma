@@ -17,6 +17,7 @@ model Client {
   onboardingToken   String   @unique
   calendlyConnected Boolean  @default(false)
   closeConnected    Boolean  @default(false)
+  ghlConnected      Boolean  @default(false)
   stripeConnected   Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

@@ -4,7 +4,7 @@ import { ConnectIntegrationDto } from './dto/connect-integration.dto';
 
 @Controller('onboarding/:token/integrations')
 export class IntegrationsController {
-  constructor(private readonly integrationsService: IntegrationsService) {}
+  constructor(private readonly integrationsService: IntegrationsService) { }
 
   @Post('calendly')
   connectCalendly(
@@ -20,6 +20,14 @@ export class IntegrationsController {
     @Body() dto: ConnectIntegrationDto,
   ) {
     return this.integrationsService.connectClose(token, dto);
+  }
+
+  @Post('ghl')
+  connectGhl(
+    @Param('token') token: string,
+    @Body() dto: ConnectIntegrationDto,
+  ) {
+    return this.integrationsService.connectGhl(token, dto);
   }
 
   @Post('stripe')

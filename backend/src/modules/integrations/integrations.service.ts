@@ -9,7 +9,7 @@ export class IntegrationsService {
   constructor(
     private prisma: PrismaService,
     private clientsService: ClientsService,
-  ) {}
+  ) { }
 
   async validateCalendlyApiKey(apiKey: string): Promise<boolean> {
     // Stub function - in production, this would make an actual API call to Calendly
@@ -50,20 +50,20 @@ export class IntegrationsService {
 
       // If we get 401/403, the key is invalid
       if (error.response?.status === 401 || error.response?.status === 403) {
-        const errorMsg = error.response?.data?.error?.message || 
-                        error.response?.data?.message || 
-                        'Authentication failed';
+        const errorMsg = error.response?.data?.error?.message ||
+          error.response?.data?.message ||
+          'Authentication failed';
         console.error(`Close API key validation failed: ${errorMsg}`);
         return false;
       }
-      
+
       // For network errors or timeouts, allow connection but log warning
       // It will fail during sync if truly invalid
       if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || !error.response) {
         console.warn('Close API validation: Network error, allowing connection');
         return true;
       }
-      
+
       // For other HTTP errors, assume invalid
       return false;
     }
@@ -243,6 +243,99 @@ export class IntegrationsService {
     return {
       success: true,
       message: 'Stripe connected',
+    };
+  }
+
+  async validateGhlApiKey(apiKey: string): Promise<boolean> {
+    if (!apiKey || apiKey.trim().length === 0) {
+      return false;
+    }
+
+    const trimmedKey = apiKey.trim();
+
+    try {
+      // GHL V2 API validation using /contacts with limit 1
+      const response = await axios.get('https://services.leadconnectorhq.com/contacts/', {
+        headers: {
+          Authorization: `Bearer ${trimmedKey}`,
+          'Content-Type': 'application/json',
+          'Version': '2021-07-28',
+        },
+        params: { limit: 1 },
+        timeout: 10000,
+      });
+      return response.status === 200;
+    } catch (error: any) {
+      console.error('GHL API validation error:', {
+        status: error.response?.status,
+        message: error.message,
+      });
+
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        return false;
+      }
+
+      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || !error.response) {
+        console.warn('GHL API validation: Network error, allowing connection');
+        return true;
+      }
+
+      return false;
+    }
+  }
+
+  async connectGhl(token: string, dto: ConnectIntegrationDto) {
+    const clientData = await this.clientsService.findByOnboardingToken(token);
+    const client = await this.clientsService.findById(clientData.clientId);
+
+    const trimmedKey = dto.apiKey.trim();
+
+    try {
+      const isValid = await this.validateGhlApiKey(trimmedKey);
+      if (!isValid) {
+        throw new BadRequestException(
+          'Invalid GHL API key. Please check that your API key is correct and active.'
+        );
+      }
+    } catch (error: any) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || !error.response) {
+        console.warn('GHL API validation: Network error during validation, allowing connection');
+      } else {
+        throw new BadRequestException(
+          `Failed to validate GHL API key: ${error.message}`
+        );
+      }
+    }
+
+    await this.prisma.clientIntegration.upsert({
+      where: {
+        clientId_provider: {
+          clientId: client.id,
+          provider: 'ghl',
+        },
+      },
+      update: {
+        apiKey: trimmedKey,
+        updatedAt: new Date(),
+      },
+      create: {
+        clientId: client.id,
+        provider: 'ghl',
+        apiKey: trimmedKey,
+      },
+    });
+
+    await this.prisma.client.update({
+      where: { id: client.id },
+      data: { ghlConnected: true },
+    });
+
+    return {
+      success: true,
+      message: 'GoHighLevel connected',
     };
   }
 }
