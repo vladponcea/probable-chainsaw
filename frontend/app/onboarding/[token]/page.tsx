@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Stepper from '@/components/Stepper';
-import VideoSection from '@/components/VideoSection';
 import { clientsApi, integrationsApi, Client } from '@/lib/api';
 
 export default function OnboardingPage() {
@@ -238,12 +237,6 @@ export default function OnboardingPage() {
                     and more to give you actionable insights.
                   </p>
                 </div>
-
-                <VideoSection
-                  title="Introduction Video"
-                  description="Watch this short video to learn how our dashboard can help you optimize your operations."
-                  videoUrl="https://example.com/intro.mp4"
-                />
 
                 <div className="flex justify-end">
                   <button
