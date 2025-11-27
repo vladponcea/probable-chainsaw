@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ClientsService } from '../clients/clients.service';
 import { MetricsService, TimePeriod } from '../metrics/metrics.service';
-import { SyncService } from '../sync/sync.service';
+import { SyncService, SyncProgress } from '../sync/sync.service';
 import { IntegrationsService } from '../integrations/integrations.service';
 import { ConnectIntegrationDto } from '../integrations/dto/connect-integration.dto';
 
@@ -34,20 +34,20 @@ export class DashboardService {
   async triggerSync(token: string) {
     try {
       const clientData = await this.clientsService.findByOnboardingToken(token);
-      await this.syncService.syncClient(clientData.clientId);
-      const status = this.syncService.getSyncStatus(clientData.clientId);
+      // Start sync asynchronously (don't await)
+      this.syncService.syncClient(clientData.clientId).catch((error) => {
+        // Error is already logged in sync service
+        console.error(`Sync error for client ${clientData.clientId}:`, error);
+      });
       
       return { 
         success: true, 
-        message: status.status === 'success' 
-          ? 'Sync completed successfully' 
-          : `Sync completed with issues: ${status.status}`,
-        status: status.status,
+        message: 'Sync started',
       };
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || 'Sync failed',
+        message: error.message || 'Failed to start sync',
       };
     }
   }
@@ -56,6 +56,18 @@ export class DashboardService {
     const clientData = await this.clientsService.findByOnboardingToken(token);
     const status = this.syncService.getSyncStatus(clientData.clientId);
     return status;
+  }
+
+  async getSyncProgress(token: string): Promise<SyncProgress | null> {
+    const clientData = await this.clientsService.findByOnboardingToken(token);
+    const progress = this.syncService.getSyncProgress(clientData.clientId);
+    return progress;
+  }
+
+  async clearSyncProgress(token: string) {
+    const clientData = await this.clientsService.findByOnboardingToken(token);
+    this.syncService.clearSyncProgress(clientData.clientId);
+    return { success: true };
   }
 
   async updateIntegration(

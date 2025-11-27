@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { clientsApi, dashboardApi, Client, DashboardMetrics, SyncStatus, DateRangeOption } from '@/lib/api';
+import { clientsApi, dashboardApi, Client, DashboardMetrics, SyncStatus, SyncProgress, DateRangeOption } from '@/lib/api';
 import MetricsGrid from '@/components/metrics/MetricsGrid';
 import DateRangePicker from '@/components/metrics/DateRangePicker';
 import SyncStatusComponent from '@/components/metrics/SyncStatus';
@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [client, setClient] = useState<Client | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
+  const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
   const [dateRange, setDateRange] = useState<DateRangeOption>('mtd');
   const [customRange, setCustomRange] = useState<{ startDate: string; endDate: string }>({
     startDate: '',
@@ -105,25 +106,58 @@ export default function DashboardPage() {
   const handleSync = async (silent = false) => {
     try {
       setSyncing(true);
+      setSyncProgress(null);
       const result = await dashboardApi.triggerSync(token);
-      // Refresh metrics and sync status after sync
-      await Promise.all([fetchMetrics(), fetchSyncStatus()]);
-
-      // Show success/partial success message only if not silent
-      if (!silent) {
-        if (result.success) {
-          // Success message is already shown in sync status
-        } else {
-          alert(result.message || 'Sync completed with errors');
+      
+      if (!result.success) {
+        if (!silent) {
+          alert(result.message || 'Failed to start sync');
         }
+        setSyncing(false);
+        return;
       }
+
+      // Poll for progress updates
+      let progressInterval: NodeJS.Timeout | null = null;
+      let timeoutId: NodeJS.Timeout | null = null;
+
+      progressInterval = setInterval(async () => {
+        try {
+          const progress = await dashboardApi.getSyncProgress(token);
+          setSyncProgress(progress);
+          
+          if (progress && (progress.status === 'completed' || progress.status === 'error')) {
+            if (progressInterval) clearInterval(progressInterval);
+            if (timeoutId) clearTimeout(timeoutId);
+            setSyncing(false);
+            // Refresh metrics and sync status after sync completes
+            await Promise.all([fetchMetrics(), fetchSyncStatus()]);
+            // Clear progress after 5 seconds
+            setTimeout(() => {
+              setSyncProgress(null);
+              dashboardApi.clearSyncProgress(token);
+            }, 5000);
+          }
+        } catch (err) {
+          // Ignore errors while polling
+          console.error('Error fetching sync progress:', err);
+        }
+      }, 1000); // Poll every second
+
+      // Timeout after 5 minutes
+      timeoutId = setTimeout(() => {
+        if (progressInterval) clearInterval(progressInterval);
+        setSyncing(false);
+        if (!silent) {
+          alert('Sync is taking longer than expected. Please check back later.');
+        }
+      }, 300000);
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || err.message || 'Failed to sync data';
       if (!silent) {
         alert(errorMsg);
       }
       console.error('Sync error:', err);
-    } finally {
       setSyncing(false);
     }
   };
@@ -235,6 +269,7 @@ export default function DashboardPage() {
               status={syncStatus.status}
               onSync={handleSync}
               isSyncing={syncing}
+              progress={syncProgress}
             />
           </div>
         )}

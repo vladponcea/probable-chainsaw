@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ClientsService } from '../clients/clients.service';
+import { SyncService } from '../sync/sync.service';
 import { ConnectIntegrationDto } from './dto/connect-integration.dto';
 import axios from 'axios';
 
@@ -9,7 +10,8 @@ export class IntegrationsService {
   constructor(
     private prisma: PrismaService,
     private clientsService: ClientsService,
-  ) { }
+    private syncService: SyncService,
+  ) {}
 
   async validateCalendlyApiKey(apiKey: string): Promise<boolean> {
     // Stub function - in production, this would make an actual API call to Calendly
@@ -92,6 +94,28 @@ export class IntegrationsService {
       throw new BadRequestException('Invalid Calendly API key');
     }
 
+    // Check if integration already exists (update vs new)
+    const existingIntegration = await this.prisma.clientIntegration.findUnique({
+      where: {
+        clientId_provider: {
+          clientId: client.id,
+          provider: 'calendly',
+        },
+      },
+    });
+
+    const isUpdate = !!existingIntegration && existingIntegration.apiKey !== dto.apiKey;
+
+    // If updating (API key changed), delete all existing Calendly data
+    if (isUpdate) {
+      await this.prisma.bookedCall.deleteMany({
+        where: {
+          clientId: client.id,
+          source: 'calendly',
+        },
+      });
+    }
+
     // Upsert integration
     await this.prisma.clientIntegration.upsert({
       where: {
@@ -117,9 +141,19 @@ export class IntegrationsService {
       data: { calendlyConnected: true },
     });
 
+    // If updating, trigger sync to fetch new data
+    if (isUpdate) {
+      try {
+        await this.syncService.syncClient(client.id);
+      } catch (error: any) {
+        // Log error but don't fail the connection
+        console.error(`Error syncing Calendly after API key update: ${error.message}`);
+      }
+    }
+
     return {
       success: true,
-      message: 'Calendly connected',
+      message: isUpdate ? 'Calendly API key updated and data refreshed' : 'Calendly connected',
     };
   }
 
@@ -137,6 +171,44 @@ export class IntegrationsService {
         'Invalid Close CRM API key format. API keys should start with "api_". ' +
         'You can find your API key in Close CRM Settings > Developer > API Keys'
       );
+    }
+
+    // Check if integration already exists (update vs new)
+    const existingIntegration = await this.prisma.clientIntegration.findUnique({
+      where: {
+        clientId_provider: {
+          clientId: client.id,
+          provider: 'close',
+        },
+      },
+    });
+
+    const isUpdate = !!existingIntegration && existingIntegration.apiKey !== trimmedKey;
+
+    // If updating (API key changed), delete all existing Close data
+    if (isUpdate) {
+      // Delete leads from Close
+      await this.prisma.lead.deleteMany({
+        where: {
+          clientId: client.id,
+          source: 'close',
+        },
+      });
+
+      // Delete deals from Close
+      await this.prisma.deal.deleteMany({
+        where: {
+          clientId: client.id,
+          source: 'close',
+        },
+      });
+
+      // Delete status mappings
+      await this.prisma.opportunityStatusMapping.deleteMany({
+        where: {
+          clientId: client.id,
+        },
+      });
     }
 
     // Validate API key by making a test call
@@ -194,9 +266,19 @@ export class IntegrationsService {
       data: { closeConnected: true },
     });
 
+    // If updating, trigger sync to fetch new data
+    if (isUpdate) {
+      try {
+        await this.syncService.syncClient(client.id);
+      } catch (error: any) {
+        // Log error but don't fail the connection
+        console.error(`Error syncing Close CRM after API key update: ${error.message}`);
+      }
+    }
+
     return {
       success: true,
-      message: 'Close CRM connected',
+      message: isUpdate ? 'Close CRM API key updated and data refreshed' : 'Close CRM connected',
     };
   }
 
@@ -213,6 +295,28 @@ export class IntegrationsService {
       throw new BadRequestException(
         'Invalid Stripe API key. Please use a secret (sk_) or restricted (rk_) key.',
       );
+    }
+
+    // Check if integration already exists (update vs new)
+    const existingIntegration = await this.prisma.clientIntegration.findUnique({
+      where: {
+        clientId_provider: {
+          clientId: client.id,
+          provider: 'stripe',
+        },
+      },
+    });
+
+    const isUpdate = !!existingIntegration && existingIntegration.apiKey !== trimmedKey;
+
+    // If updating (API key changed), delete all existing Stripe data
+    if (isUpdate) {
+      await this.prisma.payment.deleteMany({
+        where: {
+          clientId: client.id,
+          provider: 'stripe',
+        },
+      });
     }
 
     // Upsert integration
@@ -240,9 +344,19 @@ export class IntegrationsService {
       data: { stripeConnected: true },
     });
 
+    // If updating, trigger sync to fetch new data
+    if (isUpdate) {
+      try {
+        await this.syncService.syncClient(client.id);
+      } catch (error: any) {
+        // Log error but don't fail the connection
+        console.error(`Error syncing Stripe after API key update: ${error.message}`);
+      }
+    }
+
     return {
       success: true,
-      message: 'Stripe connected',
+      message: isUpdate ? 'Stripe API key updated and data refreshed' : 'Stripe connected',
     };
   }
 

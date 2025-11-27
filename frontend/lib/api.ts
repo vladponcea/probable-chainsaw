@@ -121,7 +121,7 @@ export const integrationsApi = {
 
 export interface DashboardMetrics {
   speedToLead: number | null;
-  failedPaymentRate: number;
+  failedPaymentAmountYearly: number;
   bookingRate: number | null;
   cancellationRate: number | null;
   showUpRate: number | null;
@@ -139,6 +139,15 @@ export interface DashboardMetrics {
 export interface SyncStatus {
   lastSync: string | null;
   status: string;
+}
+
+export interface SyncProgress {
+  status: 'idle' | 'syncing' | 'completed' | 'error';
+  progress: number;
+  currentStep: string;
+  logs: string[];
+  startedAt?: string;
+  completedAt?: string;
 }
 
 export type DateRangeOption =
@@ -187,6 +196,16 @@ export const dashboardApi = {
 
   getSyncStatus: async (token: string): Promise<SyncStatus> => {
     const response = await api.get(`/dashboard/${token}/sync-status`);
+    return response.data;
+  },
+
+  getSyncProgress: async (token: string): Promise<SyncProgress | null> => {
+    const response = await api.get(`/dashboard/${token}/sync-progress`);
+    return response.data;
+  },
+
+  clearSyncProgress: async (token: string): Promise<{ success: boolean }> => {
+    const response = await api.post(`/dashboard/${token}/sync-progress/clear`);
     return response.data;
   },
 
