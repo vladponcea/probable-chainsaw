@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { ConnectIntegrationRequest } from '@/lib/api';
 
 interface IntegrationCardProps {
@@ -8,6 +8,7 @@ interface IntegrationCardProps {
   connected: boolean;
   onUpdate: (apiKey: string) => Promise<void>;
   description: string;
+  customizationContent?: ReactNode;
 }
 
 export default function IntegrationCard({
@@ -15,8 +16,10 @@ export default function IntegrationCard({
   connected,
   onUpdate,
   description,
+  customizationContent,
 }: IntegrationCardProps) {
   const [showModal, setShowModal] = useState(false);
+  const [showCustomize, setShowCustomize] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,14 +65,63 @@ export default function IntegrationCard({
               <p className="text-sm text-gray-500">{description}</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
-          >
-            {connected ? 'Update Key' : 'Connect'}
-          </button>
+          <div className="flex items-center space-x-2">
+            {connected && (
+              <button
+                onClick={() => setShowCustomize(true)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
+              >
+                Customize
+              </button>
+            )}
+            <button
+              onClick={() => setShowModal(true)}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+            >
+              {connected ? 'Update Key' : 'Connect'}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Customization Modal */}
+      {showCustomize && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900">
+                Customize {name}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowCustomize(false);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {customizationContent || (
+              <div className="text-gray-600">
+                <p>No customization options available for {name}.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

@@ -35,6 +35,22 @@ export default function OnboardingPage() {
     }
   }, [token]);
 
+  // Redirect to dashboard when all integrations are connected
+  useEffect(() => {
+    if (
+      client &&
+      client.calendlyConnected &&
+      client.closeConnected &&
+      client.stripeConnected
+    ) {
+      // Small delay to show success message briefly before redirecting
+      const timer = setTimeout(() => {
+        router.push(`/dashboard/${token}`);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [client, token, router]);
+
   const fetchClientData = async () => {
     try {
       setLoading(true);
