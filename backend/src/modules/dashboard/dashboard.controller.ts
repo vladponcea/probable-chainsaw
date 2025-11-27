@@ -10,6 +10,7 @@ import {
 import { DashboardService } from './dashboard.service';
 import { TimePeriod } from '../metrics/metrics.service';
 import { ConnectIntegrationDto } from '../integrations/dto/connect-integration.dto';
+import { SyncProgress } from '../sync/sync.service';
 
 @Controller('dashboard/:token')
 export class DashboardController {
@@ -49,6 +50,16 @@ export class DashboardController {
   @Get('sync-status')
   getSyncStatus(@Param('token') token: string) {
     return this.dashboardService.getSyncStatus(token);
+  }
+
+  @Get('sync-progress')
+  getSyncProgress(@Param('token') token: string): Promise<SyncProgress | null> {
+    return this.dashboardService.getSyncProgress(token);
+  }
+
+  @Post('sync-progress/clear')
+  clearSyncProgress(@Param('token') token: string) {
+    return this.dashboardService.clearSyncProgress(token);
   }
 
   @Post('integrations/calendly')

@@ -136,8 +136,8 @@ export class MetricsService {
       const timeDiff = Math.abs(
         lead.firstContactDate.getTime() - lead.createdAt.getTime(),
       );
-      const oneHour = 60 * 60 * 1000;
-      return timeDiff >= oneHour;
+      const tenMinutes = 10 * 60 * 1000;
+      return timeDiff >= tenMinutes;
     });
 
     if (validLeads.length === 0) return null;
@@ -152,28 +152,42 @@ export class MetricsService {
     return totalHours / validLeads.length;
   }
 
-  async getFailedPaymentRate(
+  async getFailedPaymentAmountYearly(
     clientId: string,
     dateFilter: DateFilter,
   ): Promise<number> {
-    const [failed, total] = await Promise.all([
-      this.prisma.payment.count({
-        where: {
-          clientId,
-          status: 'failed',
-          paidAt: dateFilter,
-        },
-      }),
-      this.prisma.payment.count({
-        where: {
-          clientId,
-          paidAt: dateFilter,
-        },
-      }),
-    ]);
+    // Get all failed payments (not filtered by date)
+    const failedPayments = await this.prisma.payment.findMany({
+      where: {
+        clientId,
+        status: 'failed',
+      },
+      orderBy: {
+        paidAt: 'asc',
+      },
+    });
 
-    if (total === 0) return 0;
-    return (failed / total) * 100;
+    if (failedPayments.length === 0) return 0;
+
+    // Calculate total failed payment amount in dollars
+    const totalFailedAmount = failedPayments.reduce((sum, payment) => {
+      return sum + payment.amountCents / 100;
+    }, 0);
+
+    // Calculate number of days based on the date range of the failed payments list
+    let daysInRange = 1;
+    if (failedPayments.length > 0) {
+      const firstPaymentDate = failedPayments[0].paidAt;
+      const lastPaymentDate = failedPayments[failedPayments.length - 1].paidAt;
+      const diffMs = lastPaymentDate.getTime() - firstPaymentDate.getTime();
+      daysInRange = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    }
+
+    // Calculate daily average
+    const dailyAmount = totalFailedAmount / daysInRange;
+
+    // Calculate yearly amount (multiply by 12 as specified)
+    return dailyAmount * 12;
   }
 
   async getBookingRate(
@@ -470,7 +484,7 @@ export class MetricsService {
     customEndDate?: string,
   ): Promise<{
     speedToLead: number | null;
-    failedPaymentRate: number;
+    failedPaymentAmountYearly: number;
     bookingRate: number | null;
     cancellationRate: number | null;
     showUpRate: number | null;
@@ -554,7 +568,7 @@ export class MetricsService {
 
     const [
       speedToLead,
-      failedPaymentRate,
+      failedPaymentAmountYearly,
       bookingRate,
       cancellationRate,
       showUpRate,
@@ -565,7 +579,7 @@ export class MetricsService {
       totalRevenue,
     ] = await Promise.all([
       this.getSpeedToLead(clientId, dateFilter),
-      this.getFailedPaymentRate(clientId, dateFilter),
+      this.getFailedPaymentAmountYearly(clientId, dateFilter),
       this.getBookingRate(clientId, dateFilter),
       this.getCancellationRate(clientId, dateFilter),
       this.getShowUpRate(clientId, dateFilter),
@@ -578,7 +592,7 @@ export class MetricsService {
 
     return {
       speedToLead,
-      failedPaymentRate,
+      failedPaymentAmountYearly,
       bookingRate,
       cancellationRate,
       showUpRate,

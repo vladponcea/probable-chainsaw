@@ -34,10 +34,10 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
         isLoading={isLoading}
       />
       <MetricCard
-        title="Failed Payment Rate"
-        value={metrics.failedPaymentRate}
-        unit="%"
-        subtitle="Percentage of failed payments"
+        title="Failed Payment Amount (Yearly)"
+        value={metrics.failedPaymentAmountYearly}
+        unit="$"
+        subtitle="Projected yearly amount of failed payments"
         isLoading={isLoading}
       />
       <MetricCard
