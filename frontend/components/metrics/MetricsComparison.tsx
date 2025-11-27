@@ -15,6 +15,13 @@ interface Adjustments {
   aov: number; // percentage change (0 to 200)
 }
 
+interface BaseMetrics {
+  bookingRate: number;
+  showUpRate: number;
+  closeRate: number;
+  averageDealValue: number;
+}
+
 export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
   const [adjustments, setAdjustments] = useState<Adjustments>({
     bookingRate: 25,
@@ -23,15 +30,46 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
     aov: 0,
   });
 
+  // Local state for base metrics to allow manual overrides (e.g. when value is 0)
+  const [baseMetrics, setBaseMetrics] = useState<BaseMetrics>({
+    bookingRate: metrics.bookingRate || 0,
+    showUpRate: metrics.showUpRate || 0,
+    closeRate: metrics.closeRate || 0,
+    averageDealValue: metrics.averageDealValue || 0,
+  });
+
+  // Sync state with props when props change, but only if we haven't manually edited?
+  // For simplicity, we'll sync whenever the prop values actually change.
+  useEffect(() => {
+    setBaseMetrics({
+      bookingRate: metrics.bookingRate || 0,
+      showUpRate: metrics.showUpRate || 0,
+      closeRate: metrics.closeRate || 0,
+      averageDealValue: metrics.averageDealValue || 0,
+    });
+  }, [
+    metrics.bookingRate,
+    metrics.showUpRate,
+    metrics.closeRate,
+    metrics.averageDealValue,
+  ]);
+
   const projectedMetrics = useMemo(() => {
-    return calculateProjectedMetrics(metrics, adjustments);
-  }, [metrics, adjustments]);
+    return calculateProjectedMetrics(metrics, adjustments, baseMetrics);
+  }, [metrics, adjustments, baseMetrics]);
 
   const handleAdjustmentChange = (
     key: keyof Adjustments,
     value: number,
   ) => {
     setAdjustments((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleBaseMetricChange = (key: keyof BaseMetrics, value: number) => {
+    setBaseMetrics((prev) => ({
       ...prev,
       [key]: value,
     }));
@@ -44,10 +82,17 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
       closeRate: 0,
       aov: 0,
     });
+    // Also reset base metrics to props
+    setBaseMetrics({
+      bookingRate: metrics.bookingRate || 0,
+      showUpRate: metrics.showUpRate || 0,
+      closeRate: metrics.closeRate || 0,
+      averageDealValue: metrics.averageDealValue || 0,
+    });
   };
 
   // Helper to calculate the projected dollar value for AOV slider display
-  const currentAov = metrics.averageDealValue || 0;
+  const currentAov = baseMetrics.averageDealValue;
   const projectedAovDisplay = currentAov * (1 + adjustments.aov / 100);
 
   return (
@@ -57,7 +102,7 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
           Projected Growth
         </h2>
         <p className="text-slate-400 text-lg">
-          Adjust key metrics to forecast your potential revenue.
+          Adjust key metrics to forecast your potential revenue. Double-click on current values to edit them.
         </p>
       </div>
 
@@ -87,7 +132,11 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
                   className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
                 />
                 <div className="flex justify-between text-xs text-slate-500 mt-2 font-medium">
-                  <span>Current</span>
+                  <EditableMetricBase
+                    value={baseMetrics.bookingRate}
+                    onChange={(val) => handleBaseMetricChange('bookingRate', val)}
+                    format={(v) => `${v.toFixed(1)}%`}
+                  />
                   <span>+300%</span>
                 </div>
               </div>
@@ -113,7 +162,11 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
                   className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
                 />
                 <div className="flex justify-between text-xs text-slate-500 mt-2 font-medium">
-                  <span>Current</span>
+                  <EditableMetricBase
+                    value={baseMetrics.showUpRate}
+                    onChange={(val) => handleBaseMetricChange('showUpRate', val)}
+                    format={(v) => `${v.toFixed(1)}%`}
+                  />
                   <span>+300%</span>
                 </div>
               </div>
@@ -139,7 +192,11 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
                   className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
                 />
                 <div className="flex justify-between text-xs text-slate-500 mt-2 font-medium">
-                  <span>Current</span>
+                  <EditableMetricBase
+                    value={baseMetrics.closeRate}
+                    onChange={(val) => handleBaseMetricChange('closeRate', val)}
+                    format={(v) => `${v.toFixed(1)}%`}
+                  />
                   <span>+300%</span>
                 </div>
               </div>
@@ -165,7 +222,11 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
                   className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
                 />
                 <div className="flex justify-between text-xs text-slate-500 mt-2 font-medium">
-                  <span>${currentAov.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  <EditableMetricBase
+                    value={baseMetrics.averageDealValue}
+                    onChange={(val) => handleBaseMetricChange('averageDealValue', val)}
+                    format={(v) => `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                  />
                   <span>${(currentAov * 3).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </div>
               </div>
@@ -220,13 +281,76 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
   );
 }
 
+// Helper component for editable base metrics
+function EditableMetricBase({
+  value,
+  onChange,
+  format,
+}: {
+  value: number;
+  onChange: (val: number) => void;
+  format: (v: number) => string;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(value.toString());
+
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+    setTempValue(value.toString());
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    const num = parseFloat(tempValue);
+    if (!isNaN(num)) {
+      onChange(num);
+    } else {
+      setTempValue(value.toString()); // Revert if invalid
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleBlur();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+      setTempValue(value.toString()); // Revert
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <input
+        autoFocus
+        type="number"
+        value={tempValue}
+        onChange={(e) => setTempValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        className="w-20 bg-slate-800 text-white text-xs rounded px-2 py-1 border border-primary-500 outline-none"
+      />
+    );
+  }
+
+  return (
+    <span
+      onDoubleClick={handleDoubleClick}
+      className="cursor-pointer hover:text-primary-400 hover:underline transition-all"
+      title="Double click to edit base value"
+    >
+      {format(value)}
+    </span>
+  );
+}
+
 function calculateProjectedMetrics(
   current: DashboardMetrics,
   adjustments: Adjustments,
+  base: BaseMetrics,
 ): DashboardMetrics {
   // 1. Calculate New Booking Rate
   // Adjustment is percentage increase (e.g. +50% means current * 1.5)
-  const currentBookingRate = current.bookingRate || 0;
+  const currentBookingRate = base.bookingRate;
   const newBookingRate = currentBookingRate * (1 + adjustments.bookingRate / 100);
 
   // 2. Calculate New Booked Calls based on New Booking Rate
@@ -234,13 +358,23 @@ function calculateProjectedMetrics(
   if (current.totalLeads > 0) {
     newBookedCalls = (current.totalLeads * newBookingRate) / 100;
   } else {
-    // Fallback if no leads data
+    // Fallback if no leads data, assume proportional increase from base booked calls?
+    // But we don't have a "base booked calls" in BaseMetrics.
+    // We can estimate base booked calls from base booking rate if we assume total leads is constant?
+    // Or just use the original bookedCalls and scale it by the ratio of newRate / oldRate?
+    // If oldRate is 0, this fails.
+    // Let's stick to the logic: newBookedCalls = current.bookedCalls * (1 + adjustments.bookingRate / 100)
+    // BUT, if we changed the base rate manually, we should probably use that.
+    // If we manually set base rate to 10% (from 0%), and we have 0 leads, we still get 0 calls.
+    // This implies we need leads for this to work.
+    // If totalLeads is 0, we can't really project anything unless we also override leads.
+    // For now, let's assume totalLeads exists or use the fallback.
     newBookedCalls = current.bookedCalls * (1 + adjustments.bookingRate / 100);
   }
 
   // 3. Calculate New Show Up Rate
   // Adjustment is percentage increase (e.g. +50% means current * 1.5)
-  const currentShowUpRate = current.showUpRate || 0;
+  const currentShowUpRate = base.showUpRate;
   const newShowUpRate = Math.min(100, currentShowUpRate * (1 + adjustments.showUpRate / 100));
 
   // 4. Calculate New Show Ups
@@ -248,14 +382,14 @@ function calculateProjectedMetrics(
 
   // 5. Calculate New Close Rate
   // Adjustment is percentage increase (e.g. +50% means current * 1.5)
-  const currentCloseRate = current.closeRate || 0;
+  const currentCloseRate = base.closeRate;
   const newCloseRate = Math.min(100, currentCloseRate * (1 + adjustments.closeRate / 100));
 
   // 6. Calculate New Won Deals
   const newWonDeals = (newShowUps * newCloseRate) / 100;
 
   // 7. Calculate New AOV
-  const currentAOV = current.averageDealValue || 0;
+  const currentAOV = base.averageDealValue;
   const newAOV = currentAOV * (1 + adjustments.aov / 100);
 
   // 8. Calculate New Total Revenue
