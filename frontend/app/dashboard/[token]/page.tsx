@@ -7,6 +7,7 @@ import MetricsGrid from '@/components/metrics/MetricsGrid';
 import DateRangePicker from '@/components/metrics/DateRangePicker';
 import SyncStatusComponent from '@/components/metrics/SyncStatus';
 import MetricsComparison from '@/components/metrics/MetricsComparison';
+import BaselineKPIs from '@/components/metrics/BaselineKPIs';
 
 export default function DashboardPage() {
   const params = useParams();
@@ -287,6 +288,7 @@ export default function DashboardPage() {
         ) : metrics ? (
           <div className="animate-slide-up space-y-8">
             <MetricsGrid metrics={metrics} isLoading={loading} />
+            <BaselineKPIs metrics={metrics} />
             <MetricsComparison metrics={metrics} />
           </div>
         ) : (
