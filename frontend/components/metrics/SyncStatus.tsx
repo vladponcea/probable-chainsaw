@@ -29,19 +29,25 @@ export default function SyncStatus({
   };
 
   return (
-    <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4 border border-gray-200">
-      <div className="flex items-center space-x-3">
+    <div className="flex items-center justify-between bg-slate-900/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-800 shadow-lg shadow-black/20">
+      <div className="flex items-center space-x-4">
+        <div className="relative">
+          <div className={`w-3 h-3 rounded-full ${status === 'Success' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]'}`}></div>
+          <div className={`absolute inset-0 w-3 h-3 rounded-full animate-ping opacity-75 ${status === 'Success' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+        </div>
         <div>
-          <p className="text-sm font-medium text-gray-700">Last Sync</p>
-          <p className="text-xs text-gray-500">
-            {formatLastSync(lastSync)} • {status}
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Last Sync</p>
+          <p className="text-sm font-medium text-slate-200 flex items-center">
+            {formatLastSync(lastSync)}
+            <span className="mx-2 text-slate-600">•</span>
+            <span className={status === 'Success' ? 'text-emerald-400' : 'text-amber-400'}>{status}</span>
           </p>
         </div>
       </div>
       <button
         onClick={onSync}
         disabled={isSyncing}
-        className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+        className="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-bold hover:bg-primary-500 transition-all shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center"
       >
         {isSyncing ? (
           <>

@@ -69,9 +69,9 @@ export default function DashboardPage() {
         period: dateRange,
         ...(dateRange === 'custom'
           ? {
-              startDate: customRange.startDate,
-              endDate: customRange.endDate,
-            }
+            startDate: customRange.startDate,
+            endDate: customRange.endDate,
+          }
           : {}),
       });
       setMetrics(metricsData);
@@ -100,7 +100,7 @@ export default function DashboardPage() {
       const result = await dashboardApi.triggerSync(token);
       // Refresh metrics and sync status after sync
       await Promise.all([fetchMetrics(), fetchSyncStatus()]);
-      
+
       // Show success/partial success message
       if (result.success) {
         // Success message is already shown in sync status
@@ -136,9 +136,9 @@ export default function DashboardPage() {
 
   if (error && !client) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <div className="text-red-600 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
+        <div className="bg-slate-900/50 backdrop-blur-xl p-8 rounded-2xl shadow-2xl shadow-black/50 border border-slate-800 max-w-md w-full">
+          <div className="text-rose-500 mb-4">
             <svg
               className="w-12 h-12 mx-auto"
               fill="none"
@@ -153,59 +153,31 @@ export default function DashboardPage() {
               />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            Error
+          <h2 className="text-xl font-bold text-white mb-2 text-center">
+            Error Loading Dashboard
           </h2>
-          <p className="text-gray-600">{error}</p>
+          <p className="text-slate-400 text-center">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-transparent py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Dashboard
-              </h1>
-              <p className="mt-2 text-gray-600">
-                {client?.companyName || 'Your'} Performance Metrics
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push(`/dashboard/${token}/integrations`)}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center"
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                Integrations
-              </button>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight">
+              Dashboard
+            </h1>
+            <p className="mt-2 text-lg text-slate-400 font-medium">
+              <span className="text-primary-400">{client?.companyName || 'Your'}</span> Performance Metrics
+            </p>
           </div>
-          <div className="flex justify-end">
-            <div className="max-w-xl w-full">
+
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-full sm:w-auto">
               <DateRangePicker
                 selectedRange={dateRange}
                 customStartDate={customRange.startDate}
@@ -213,12 +185,38 @@ export default function DashboardPage() {
                 onChange={handleDateRangeChange}
               />
             </div>
+
+            <button
+              onClick={() => router.push(`/dashboard/${token}/integrations`)}
+              className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-bold hover:from-primary-500 hover:to-primary-400 transition-all shadow-lg shadow-primary-500/30 hover:shadow-primary-500/50 hover:-translate-y-0.5 flex items-center justify-center"
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              Integrations
+            </button>
           </div>
         </div>
 
         {/* Sync Status */}
         {syncStatus && (
-          <div className="mb-6">
+          <div className="animate-fade-in">
             <SyncStatusComponent
               lastSync={syncStatus.lastSync}
               status={syncStatus.status}
@@ -230,22 +228,36 @@ export default function DashboardPage() {
 
         {/* Metrics Grid */}
         {dateRange === 'custom' &&
-        (!customRange.startDate || !customRange.endDate) ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-600">
-            Select both a start and end date to view metrics.
+          (!customRange.startDate || !customRange.endDate) ? (
+          <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-800 p-12 text-center text-slate-400">
+            <svg className="w-16 h-16 mx-auto mb-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="text-lg font-medium">Select a Date Range</p>
+            <p className="text-sm mt-2">Please select both a start and end date to view metrics.</p>
           </div>
         ) : metrics ? (
-          <MetricsGrid metrics={metrics} isLoading={loading} />
+          <div className="animate-slide-up">
+            <MetricsGrid metrics={metrics} isLoading={loading} />
+          </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading metrics...</p>
+          <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-800 p-20 text-center">
+            <div className="relative w-16 h-16 mx-auto">
+              <div className="absolute inset-0 border-4 border-slate-700 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-primary-500 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <p className="mt-6 text-slate-400 font-medium animate-pulse">Loading dashboard metrics...</p>
           </div>
         )}
 
         {error && metrics && (
-          <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm text-yellow-800">{error}</p>
+          <div className="mt-4 bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 backdrop-blur-sm">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-rose-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-rose-200">{error}</p>
+            </div>
           </div>
         )}
       </div>
