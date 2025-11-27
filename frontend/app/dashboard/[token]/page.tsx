@@ -147,9 +147,48 @@ export default function DashboardPage() {
   };
 
 
+  const getMonthsCount = () => {
+    if (dateRange === 'last30' || dateRange === 'mtd') {
+      return 1;
+    }
+    if (dateRange === 'last7' || dateRange === 'today' || dateRange === 'yesterday') {
+      // For short periods, we can default to 1 month to show "monthly pace" based on that period?
+      // Or just return 1 to treat the period as the unit?
+      // User asked for "Avg lead/month". If I select "Last 7 days", dividing by 0.25 months might be weird?
+      // Let's stick to the plan: "Ensure a minimum of 1 month".
+      return 1;
+    }
+    if (dateRange === 'custom' && customRange.startDate && customRange.endDate) {
+      const start = new Date(customRange.startDate);
+      const end = new Date(customRange.endDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      // If less than 30 days, treat as 1 month
+      if (diffDays < 30) return 1;
+      return diffDays / 30; // Approximation
+    }
+    // For 'all', 'ytd', 'qtd', etc., we might need more complex logic or just approximation.
+    // Let's use a simple approximation based on current date for YTD/QTD if needed,
+    // but for now let's default to 1 if we can't easily determine, or maybe we shouldn't show it?
+    // Actually, backend filters data. If I select YTD (Jan 1 to Nov 27), that's ~11 months.
+    if (dateRange === 'ytd') {
+      const now = new Date();
+      return now.getMonth() + 1;
+    }
+    if (dateRange === 'qtd') {
+      const now = new Date();
+      const quarterMonth = now.getMonth() % 3;
+      return quarterMonth + 1;
+    }
+    return 1;
+  };
+
+  const monthsCount = getMonthsCount();
+  const avgLeadsPerMonth = metrics ? (metrics.totalLeads / monthsCount) : 0;
+
   if (error && !client) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-transparent">
+      <div className="min-h-screen flex items-center justify-center bg-transparent" >
         <div className="bg-slate-900/50 backdrop-blur-xl p-8 rounded-2xl shadow-2xl shadow-black/50 border border-slate-800 max-w-md w-full">
           <div className="text-rose-500 mb-4">
             <svg
@@ -171,7 +210,7 @@ export default function DashboardPage() {
           </h2>
           <p className="text-slate-400 text-center">{error}</p>
         </div>
-      </div>
+      </div >
     );
   }
 
@@ -251,8 +290,15 @@ export default function DashboardPage() {
           </div>
         ) : metrics ? (
           <div className="animate-slide-up space-y-8">
-            <MetricsGrid metrics={metrics} isLoading={loading} />
-            <MetricsComparison metrics={metrics} />
+            <MetricsGrid
+              metrics={metrics}
+              isLoading={loading}
+              avgLeadsPerMonth={avgLeadsPerMonth}
+            />
+            <MetricsComparison
+              metrics={metrics}
+              avgLeadsPerMonth={avgLeadsPerMonth}
+            />
           </div>
         ) : (
           <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-800 p-20 text-center">

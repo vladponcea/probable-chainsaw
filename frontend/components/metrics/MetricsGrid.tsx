@@ -6,11 +6,26 @@ import { DashboardMetrics } from '@/lib/api';
 interface MetricsGridProps {
   metrics: DashboardMetrics;
   isLoading: boolean;
+  avgLeadsPerMonth: number;
 }
 
-export default function MetricsGrid({ metrics, isLoading }: MetricsGridProps) {
+export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: MetricsGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <MetricCard
+        title="Total Revenue"
+        value={metrics.totalRevenue}
+        unit="$"
+        subtitle="Total cash collected"
+        isLoading={isLoading}
+      />
+      <MetricCard
+        title="Avg Leads/Month"
+        value={avgLeadsPerMonth}
+        unit=""
+        subtitle="Average leads per month"
+        isLoading={isLoading}
+      />
       <MetricCard
         title="Speed to Lead"
         value={metrics.speedToLead}
@@ -72,13 +87,6 @@ export default function MetricsGrid({ metrics, isLoading }: MetricsGridProps) {
         value={metrics.pipelineVelocity}
         unit="days"
         subtitle="Average time from lead to closed deal"
-        isLoading={isLoading}
-      />
-      <MetricCard
-        title="Total Revenue"
-        value={metrics.totalRevenue}
-        unit="$"
-        subtitle="Total cash collected"
         isLoading={isLoading}
       />
     </div>
