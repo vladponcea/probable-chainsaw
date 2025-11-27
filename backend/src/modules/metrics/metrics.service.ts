@@ -353,6 +353,116 @@ export class MetricsService {
     }, 0);
   }
 
+  async getShowUpRate(
+    clientId: string,
+    dateFilter: DateFilter,
+  ): Promise<number | null> {
+    // Get booked calls in date range that are not cancelled
+    const bookedCalls = await this.prisma.bookedCall.findMany({
+      where: {
+        clientId,
+        source: 'calendly',
+        status: {
+          not: 'cancelled',
+        },
+        scheduledAt: dateFilter,
+      },
+    });
+
+    if (bookedCalls.length === 0) return null;
+
+    // Get status mappings to determine which deal stages mean "showed up"
+    const statusMappings = await this.prisma.opportunityStatusMapping.findMany({
+      where: {
+        clientId,
+        showedUp: true,
+      },
+    });
+
+    const showedUpStatusIds = new Set(
+      statusMappings.map((m) => m.statusId),
+    );
+
+    // Get all deals in the date range
+    const deals = await this.prisma.deal.findMany({
+      where: {
+        clientId,
+        source: 'close',
+        OR: [
+          { createdAt: dateFilter },
+          { lastStageChangeDate: dateFilter },
+        ],
+      },
+    });
+
+    // Match deals to calls by date proximity (within 7 days)
+    const showUps = bookedCalls.filter((call) => {
+      const callDate = call.scheduledAt.getTime();
+      const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+
+      // Find deals that were created or moved to a "showed up" stage around the call time
+      return deals.some((deal) => {
+        // Check if deal stage maps to "showed up"
+        if (!deal.stage || !showedUpStatusIds.has(deal.stage)) {
+          return false;
+        }
+
+        // Check date proximity - deal should be created or moved to this stage within 7 days of the call
+        const dealDate = deal.lastStageChangeDate
+          ? deal.lastStageChangeDate.getTime()
+          : deal.createdAt.getTime();
+
+        const dateDiff = Math.abs(callDate - dealDate);
+        return dateDiff <= sevenDaysInMs;
+      });
+    }).length;
+
+    return (showUps / bookedCalls.length) * 100;
+  }
+
+  async getCloseRate(
+    clientId: string,
+    dateFilter: DateFilter,
+  ): Promise<number | null> {
+    // Get status mappings to determine which deal stages mean "showed up"
+    const statusMappings = await this.prisma.opportunityStatusMapping.findMany({
+      where: {
+        clientId,
+        showedUp: true,
+      },
+    });
+
+    const showedUpStatusIds = new Set(
+      statusMappings.map((m) => m.statusId),
+    );
+
+    // Get all deals in the date range
+    const deals = await this.prisma.deal.findMany({
+      where: {
+        clientId,
+        source: 'close',
+        OR: [
+          { createdAt: dateFilter },
+          { lastStageChangeDate: dateFilter },
+        ],
+      },
+    });
+
+    // Count show ups (deals with stages mapped to "showed up")
+    const showUps = deals.filter((deal) => {
+      return deal.stage && showedUpStatusIds.has(deal.stage);
+    }).length;
+
+    if (showUps === 0) return null;
+
+    // Count won deals
+    const wonDeals = deals.filter((deal) => {
+      return deal.status === 'won';
+    }).length;
+
+    return (wonDeals / showUps) * 100;
+  }
+
   async getAllMetrics(
     clientId: string,
     timePeriod: TimePeriod,
@@ -363,10 +473,16 @@ export class MetricsService {
     failedPaymentRate: number;
     bookingRate: number | null;
     cancellationRate: number | null;
+    showUpRate: number | null;
+    closeRate: number | null;
     crmHygiene: number;
     averageDealValue: number | null;
     pipelineVelocity: number | null;
     totalRevenue: number;
+    totalLeads: number;
+    bookedCalls: number;
+    showUps: number;
+    wonDeals: number;
   }> {
     const dateFilter = this.getDateFilter(
       timePeriod,
@@ -374,11 +490,75 @@ export class MetricsService {
       customEndDate,
     );
 
+    // Get raw counts needed for calculations
+    const [totalLeads, bookedCallsData, statusMappings, dealsData] = await Promise.all([
+      this.prisma.lead.count({
+        where: {
+          clientId,
+          createdAt: dateFilter,
+        },
+      }),
+      this.prisma.bookedCall.findMany({
+        where: {
+          clientId,
+          source: 'calendly',
+          status: {
+            not: 'cancelled',
+          },
+          scheduledAt: dateFilter,
+        },
+      }),
+      this.prisma.opportunityStatusMapping.findMany({
+        where: {
+          clientId,
+          showedUp: true,
+        },
+      }),
+      this.prisma.deal.findMany({
+        where: {
+          clientId,
+          source: 'close',
+          OR: [
+            { createdAt: dateFilter },
+            { lastStageChangeDate: dateFilter },
+          ],
+        },
+      }),
+    ]);
+
+    const bookedCalls = bookedCallsData.length;
+    const showedUpStatusIds = new Set(
+      statusMappings.map((m) => m.statusId),
+    );
+
+    // Calculate show ups (matching booked calls to deals with showedUp status)
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    const showUps = bookedCallsData.filter((call) => {
+      const callDate = call.scheduledAt.getTime();
+      return dealsData.some((deal) => {
+        if (!deal.stage || !showedUpStatusIds.has(deal.stage)) {
+          return false;
+        }
+        const dealDate = deal.lastStageChangeDate
+          ? deal.lastStageChangeDate.getTime()
+          : deal.createdAt.getTime();
+        const dateDiff = Math.abs(callDate - dealDate);
+        return dateDiff <= sevenDaysInMs;
+      });
+    }).length;
+
+    // Calculate won deals
+    const wonDeals = dealsData.filter((deal) => {
+      return deal.status === 'won';
+    }).length;
+
     const [
       speedToLead,
       failedPaymentRate,
       bookingRate,
       cancellationRate,
+      showUpRate,
+      closeRate,
       crmHygiene,
       averageDealValue,
       pipelineVelocity,
@@ -388,6 +568,8 @@ export class MetricsService {
       this.getFailedPaymentRate(clientId, dateFilter),
       this.getBookingRate(clientId, dateFilter),
       this.getCancellationRate(clientId, dateFilter),
+      this.getShowUpRate(clientId, dateFilter),
+      this.getCloseRate(clientId, dateFilter),
       this.getCRMHygiene(clientId),
       this.getAverageDealValue(clientId, dateFilter),
       this.getPipelineVelocity(clientId, dateFilter),
@@ -399,10 +581,16 @@ export class MetricsService {
       failedPaymentRate,
       bookingRate,
       cancellationRate,
+      showUpRate,
+      closeRate,
       crmHygiene,
       averageDealValue,
       pipelineVelocity,
       totalRevenue,
+      totalLeads,
+      bookedCalls,
+      showUps,
+      wonDeals,
     };
   }
 }

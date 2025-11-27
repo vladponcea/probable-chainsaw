@@ -6,6 +6,7 @@ import { clientsApi, dashboardApi, Client, DashboardMetrics, SyncStatus, DateRan
 import MetricsGrid from '@/components/metrics/MetricsGrid';
 import DateRangePicker from '@/components/metrics/DateRangePicker';
 import SyncStatusComponent from '@/components/metrics/SyncStatus';
+import MetricsComparison from '@/components/metrics/MetricsComparison';
 
 export default function DashboardPage() {
   const params = useParams();
@@ -237,8 +238,9 @@ export default function DashboardPage() {
             <p className="text-sm mt-2">Please select both a start and end date to view metrics.</p>
           </div>
         ) : metrics ? (
-          <div className="animate-slide-up">
+          <div className="animate-slide-up space-y-8">
             <MetricsGrid metrics={metrics} isLoading={loading} />
+            <MetricsComparison metrics={metrics} />
           </div>
         ) : (
           <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-800 p-20 text-center">

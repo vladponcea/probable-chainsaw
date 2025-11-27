@@ -113,7 +113,7 @@ export default function IntegrationsPage() {
 
         {/* Integration Cards */}
         {client && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="space-y-4">
             <IntegrationCard
               name="Calendly"
               connected={client.calendlyConnected}
@@ -131,6 +131,11 @@ export default function IntegrationsPage() {
                 await dashboardApi.updateClose(token, { apiKey });
                 await fetchClientData();
               }}
+              customizationContent={
+                client.closeConnected ? (
+                  <StatusMappingEditor token={token} />
+                ) : undefined
+              }
             />
             <IntegrationCard
               name="Stripe"
@@ -141,13 +146,6 @@ export default function IntegrationsPage() {
                 await fetchClientData();
               }}
             />
-          </div>
-        )}
-
-        {/* Status Mapping Configuration - Only show if Close CRM is connected */}
-        {client && client.closeConnected && (
-          <div className="mt-8">
-            <StatusMappingEditor token={token} />
           </div>
         )}
 
