@@ -9,17 +9,19 @@ interface MetricsComparisonProps {
 }
 
 interface Adjustments {
-  bookedCalls: number; // percentage change (-50 to 200)
-  showUpRate: number; // percentage points change (-20 to 30)
-  closeRate: number; // percentage points change (-20 to 30)
-  aov: number; // percentage change (-50 to 200)
+  bookedCalls: number; // percentage change (20 to 200)
+  showUpRate: number; // percentage points change (20 to 30)
+  closeRate: number; // percentage points change (20 to 30)
+  cancellationRate: number; // percentage points change (20 to 30)
+  aov: number; // percentage change (0, not adjustable)
 }
 
 export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
   const [adjustments, setAdjustments] = useState<Adjustments>({
-    bookedCalls: 0,
-    showUpRate: 0,
-    closeRate: 0,
+    bookedCalls: 20,
+    showUpRate: 20,
+    closeRate: 20,
+    cancellationRate: 20,
     aov: 0,
   });
 
@@ -39,14 +41,19 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
 
   const handleReset = () => {
     setAdjustments({
-      bookedCalls: 0,
-      showUpRate: 0,
-      closeRate: 0,
+      bookedCalls: 20,
+      showUpRate: 20,
+      closeRate: 20,
+      cancellationRate: 20,
       aov: 0,
     });
   };
 
-  const hasAdjustments = Object.values(adjustments).some((val) => val !== 0);
+  const hasAdjustments = 
+    adjustments.bookedCalls !== 20 ||
+    adjustments.showUpRate !== 20 ||
+    adjustments.closeRate !== 20 ||
+    adjustments.cancellationRate !== 20;
 
   return (
     <div className="mt-12">
@@ -59,9 +66,11 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
         </p>
       </div>
 
-      {/* Sliders Section */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
-        <div className="space-y-6">
+      {/* Sliders and Projected Metrics Side by Side */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Sliders Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 lg:w-1/3">
+          <div className="space-y-6">
           {/* Booked Calls Slider */}
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -86,7 +95,7 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
             </div>
             <input
               type="range"
-              min="-50"
+              min="20"
               max="200"
               value={adjustments.bookedCalls}
               onChange={(e) =>
@@ -96,8 +105,8 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
               style={{ accentColor: '#0284c7' }}
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>-50%</span>
-              <span>0%</span>
+              <span>+20%</span>
+              <span>+110%</span>
               <span>+200%</span>
             </div>
           </div>
@@ -127,7 +136,7 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
             </div>
             <input
               type="range"
-              min="-20"
+              min="20"
               max="30"
               step="0.1"
               value={adjustments.showUpRate}
@@ -138,8 +147,8 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
               style={{ accentColor: '#0284c7' }}
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>-20pp</span>
-              <span>0pp</span>
+              <span>+20pp</span>
+              <span>+25pp</span>
               <span>+30pp</span>
             </div>
           </div>
@@ -169,7 +178,7 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
             </div>
             <input
               type="range"
-              min="-20"
+              min="20"
               max="30"
               step="0.1"
               value={adjustments.closeRate}
@@ -180,188 +189,155 @@ export default function MetricsComparison({ metrics }: MetricsComparisonProps) {
               style={{ accentColor: '#0284c7' }}
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>-20pp</span>
-              <span>0pp</span>
+              <span>+20pp</span>
+              <span>+25pp</span>
               <span>+30pp</span>
             </div>
           </div>
 
-          {/* AOV Slider */}
+          {/* Cancellation Rate Slider */}
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="text-sm font-medium text-gray-700">
-                Average Deal Value (AOV)
+                Cancellation Rate
               </label>
               <div className="text-sm text-gray-600">
                 <span className="font-semibold">
-                  {adjustments.aov > 0 ? '+' : ''}
-                  {adjustments.aov.toFixed(0)}%
+                  {adjustments.cancellationRate > 0 ? '+' : ''}
+                  {adjustments.cancellationRate.toFixed(1)}pp
                 </span>
-                {metrics.averageDealValue !== null && (
+                {metrics.cancellationRate !== null && (
                   <span className="ml-2 text-gray-500">
-                    (${metrics.averageDealValue.toFixed(2)} → $
-                    {(
-                      metrics.averageDealValue *
-                      (1 + adjustments.aov / 100)
-                    ).toFixed(2)}
-                    )
+                    ({metrics.cancellationRate.toFixed(1)}% →{' '}
+                    {Math.min(
+                      100,
+                      Math.max(0, metrics.cancellationRate + adjustments.cancellationRate),
+                    ).toFixed(1)}
+                    %)
                   </span>
                 )}
               </div>
             </div>
             <input
               type="range"
-              min="-50"
-              max="200"
-              value={adjustments.aov}
+              min="20"
+              max="30"
+              step="0.1"
+              value={adjustments.cancellationRate}
               onChange={(e) =>
-                handleAdjustmentChange('aov', Number(e.target.value))
+                handleAdjustmentChange('cancellationRate', Number(e.target.value))
               }
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
               style={{ accentColor: '#0284c7' }}
             />
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>-50%</span>
-              <span>0%</span>
-              <span>+200%</span>
+              <span>+20pp</span>
+              <span>+25pp</span>
+              <span>+30pp</span>
             </div>
           </div>
+          </div>
+
+          {/* Reset Button */}
+          {hasAdjustments && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <button
+                onClick={handleReset}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Reset All
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Reset Button */}
+        {/* Projected Metrics Grid */}
         {hasAdjustments && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Reset All
-            </button>
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Projected Metrics
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <MetricCard
+                title="Failed Payment Amount (Yearly)"
+                value={projectedMetrics.failedPaymentAmountYearly}
+                unit="$"
+                subtitle="Projected yearly amount of failed payments"
+              />
+              <MetricCard
+                title="Booking Rate"
+                value={projectedMetrics.bookingRate}
+                unit="%"
+                subtitle="Booked calls / Total leads"
+                trend={
+                  projectedMetrics.bookingRate !== null &&
+                  metrics.bookingRate !== null &&
+                  projectedMetrics.bookingRate > metrics.bookingRate
+                    ? 'up'
+                    : projectedMetrics.bookingRate !== null &&
+                        metrics.bookingRate !== null &&
+                        projectedMetrics.bookingRate < metrics.bookingRate
+                      ? 'down'
+                      : 'neutral'
+                }
+              />
+              <MetricCard
+                title="Cancellation Rate"
+                value={projectedMetrics.cancellationRate}
+                unit="%"
+                subtitle="Cancelled calls / Booked calls"
+              />
+              <MetricCard
+                title="Show Up Rate"
+                value={projectedMetrics.showUpRate}
+                unit="%"
+                subtitle="Customers who showed up / Total scheduled calls"
+                trend={
+                  projectedMetrics.showUpRate !== null &&
+                  metrics.showUpRate !== null &&
+                  projectedMetrics.showUpRate > metrics.showUpRate
+                    ? 'up'
+                    : projectedMetrics.showUpRate !== null &&
+                        metrics.showUpRate !== null &&
+                        projectedMetrics.showUpRate < metrics.showUpRate
+                      ? 'down'
+                      : 'neutral'
+                }
+              />
+              <MetricCard
+                title="Close Rate"
+                value={projectedMetrics.closeRate}
+                unit="%"
+                subtitle="Won deals / Show ups"
+                trend={
+                  projectedMetrics.closeRate !== null &&
+                  metrics.closeRate !== null &&
+                  projectedMetrics.closeRate > metrics.closeRate
+                    ? 'up'
+                    : projectedMetrics.closeRate !== null &&
+                        metrics.closeRate !== null &&
+                        projectedMetrics.closeRate < metrics.closeRate
+                      ? 'down'
+                      : 'neutral'
+                }
+              />
+              <MetricCard
+                title="Total Revenue"
+                value={projectedMetrics.totalRevenue}
+                unit="$"
+                subtitle="Total cash collected"
+                trend={
+                  projectedMetrics.totalRevenue > metrics.totalRevenue
+                    ? 'up'
+                    : projectedMetrics.totalRevenue < metrics.totalRevenue
+                      ? 'down'
+                      : 'neutral'
+                }
+              />
+            </div>
           </div>
         )}
       </div>
-
-      {/* Projected Metrics Grid */}
-      {hasAdjustments && (
-        <div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">
-            Projected Metrics
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <MetricCard
-              title="Speed to Lead"
-              value={projectedMetrics.speedToLead}
-              unit="hours"
-              subtitle="Average time from lead creation to first contact"
-            />
-            <MetricCard
-              title="Failed Payment Rate"
-              value={projectedMetrics.failedPaymentRate}
-              unit="%"
-              subtitle="Percentage of failed payments"
-            />
-            <MetricCard
-              title="Booking Rate"
-              value={projectedMetrics.bookingRate}
-              unit="%"
-              subtitle="Booked calls / Total leads"
-              trend={
-                projectedMetrics.bookingRate !== null &&
-                metrics.bookingRate !== null &&
-                projectedMetrics.bookingRate > metrics.bookingRate
-                  ? 'up'
-                  : projectedMetrics.bookingRate !== null &&
-                      metrics.bookingRate !== null &&
-                      projectedMetrics.bookingRate < metrics.bookingRate
-                    ? 'down'
-                    : 'neutral'
-              }
-            />
-            <MetricCard
-              title="Cancellation Rate"
-              value={projectedMetrics.cancellationRate}
-              unit="%"
-              subtitle="Cancelled calls / Booked calls"
-            />
-            <MetricCard
-              title="Show Up Rate"
-              value={projectedMetrics.showUpRate}
-              unit="%"
-              subtitle="Customers who showed up / Total scheduled calls"
-              trend={
-                projectedMetrics.showUpRate !== null &&
-                metrics.showUpRate !== null &&
-                projectedMetrics.showUpRate > metrics.showUpRate
-                  ? 'up'
-                  : projectedMetrics.showUpRate !== null &&
-                      metrics.showUpRate !== null &&
-                      projectedMetrics.showUpRate < metrics.showUpRate
-                    ? 'down'
-                    : 'neutral'
-              }
-            />
-            <MetricCard
-              title="Close Rate"
-              value={projectedMetrics.closeRate}
-              unit="%"
-              subtitle="Won deals / Show ups"
-              trend={
-                projectedMetrics.closeRate !== null &&
-                metrics.closeRate !== null &&
-                projectedMetrics.closeRate > metrics.closeRate
-                  ? 'up'
-                  : projectedMetrics.closeRate !== null &&
-                      metrics.closeRate !== null &&
-                      projectedMetrics.closeRate < metrics.closeRate
-                    ? 'down'
-                    : 'neutral'
-              }
-            />
-            <MetricCard
-              title="CRM Hygiene"
-              value={projectedMetrics.crmHygiene}
-              unit="%"
-              subtitle="Data quality score"
-            />
-            <MetricCard
-              title="Average Deal Value"
-              value={projectedMetrics.averageDealValue}
-              unit="$"
-              subtitle="Average value of closed deals"
-              trend={
-                projectedMetrics.averageDealValue !== null &&
-                metrics.averageDealValue !== null &&
-                projectedMetrics.averageDealValue > metrics.averageDealValue
-                  ? 'up'
-                  : projectedMetrics.averageDealValue !== null &&
-                      metrics.averageDealValue !== null &&
-                      projectedMetrics.averageDealValue < metrics.averageDealValue
-                    ? 'down'
-                    : 'neutral'
-              }
-            />
-            <MetricCard
-              title="Pipeline Velocity"
-              value={projectedMetrics.pipelineVelocity}
-              unit="days"
-              subtitle="Average time from lead to closed deal"
-            />
-            <MetricCard
-              title="Total Revenue"
-              value={projectedMetrics.totalRevenue}
-              unit="$"
-              subtitle="Total cash collected"
-              trend={
-                projectedMetrics.totalRevenue > metrics.totalRevenue
-                  ? 'up'
-                  : projectedMetrics.totalRevenue < metrics.totalRevenue
-                    ? 'down'
-                    : 'neutral'
-              }
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -399,58 +375,109 @@ function calculateProjectedMetrics(
   }
 
   // Calculate new booked calls with adjustment
-  const newBookedCalls = Math.max(
+  let newBookedCalls = Math.max(
     0,
     baseBookedCalls * (1 + adjustments.bookedCalls / 100),
   );
 
+  // Apply cancellation rate adjustment
+  // If cancellation rate increases, fewer calls actually happen
+  let newCancellationRate: number | null = null;
+  if (current.cancellationRate !== null) {
+    newCancellationRate = Math.min(100, Math.max(0, current.cancellationRate + adjustments.cancellationRate));
+  } else if (adjustments.cancellationRate !== 20) {
+    // If current is null but user made an adjustment, use the adjustment as absolute value
+    newCancellationRate = Math.min(100, Math.max(0, adjustments.cancellationRate));
+  }
+
+  // Adjust booked calls based on cancellation rate change
+  // If cancellation rate goes up, effective booked calls go down
+  if (newCancellationRate !== null && current.cancellationRate !== null) {
+    const cancellationRateChange = newCancellationRate - current.cancellationRate;
+    // Reduce effective booked calls by the cancellation rate increase
+    // e.g., if cancellation rate goes from 10% to 15% (+5pp), we lose 5% of booked calls
+    const cancellationImpact = cancellationRateChange / 100;
+    newBookedCalls = Math.max(0, newBookedCalls * (1 - cancellationImpact));
+  } else if (newCancellationRate !== null && current.cancellationRate === null) {
+    // If we're setting a cancellation rate where there wasn't one before
+    // Apply the cancellation rate to reduce effective booked calls
+    const cancellationImpact = newCancellationRate / 100;
+    newBookedCalls = Math.max(0, newBookedCalls * (1 - cancellationImpact));
+  }
+
   // Calculate new show up rate (clamped to 0-100%)
-  // If current is null but user adjusted, use 0 as base (or keep null if no adjustment)
-  let newShowUpRate: number | null = null;
+  // Always calculate a show up rate for projections to enable cascading calculations
+  let newShowUpRate: number;
   if (current.showUpRate !== null) {
+    // Add adjustment to current rate (adjustments are in percentage points)
     newShowUpRate = Math.min(
       100,
       Math.max(0, current.showUpRate + adjustments.showUpRate),
     );
-  } else if (adjustments.showUpRate !== 0) {
-    // If current is null but user made an adjustment, use the adjustment as absolute value
-    // Clamp between 0 and 100
+  } else {
+    // If current is null, use the adjustment value as absolute rate
+    // Since slider goes from +20pp to +30pp, interpret as 20% to 30% when current is null
     newShowUpRate = Math.min(100, Math.max(0, adjustments.showUpRate));
   }
 
   // Calculate new show ups based on new booked calls and new show up rate
-  const newShowUps =
-    newShowUpRate !== null && newBookedCalls > 0
-      ? Math.round((newBookedCalls * newShowUpRate) / 100)
-      : 0;
+  // This is the key connection: more booked calls → more show ups
+  const newShowUps = newBookedCalls > 0
+    ? Math.round((newBookedCalls * newShowUpRate) / 100)
+    : 0;
 
   // Calculate new close rate (clamped to 0-100%)
-  let newCloseRate: number | null = null;
+  // Always calculate a close rate for projections to enable cascading calculations
+  let newCloseRate: number;
   if (current.closeRate !== null) {
+    // Add adjustment to current rate (adjustments are in percentage points)
     newCloseRate = Math.min(100, Math.max(0, current.closeRate + adjustments.closeRate));
-  } else if (adjustments.closeRate !== 0) {
-    // If current is null but user made an adjustment, use the adjustment as absolute value
+  } else {
+    // If current is null, use the adjustment value as absolute rate
+    // Since slider goes from +20pp to +30pp, interpret as 20% to 30% when current is null
     newCloseRate = Math.min(100, Math.max(0, adjustments.closeRate));
   }
 
   // Calculate new won deals based on new show ups and new close rate
-  const newWonDeals =
-    newCloseRate !== null && newShowUps > 0
-      ? Math.round((newShowUps * newCloseRate) / 100)
-      : 0;
+  // This is the key connection: more show ups → more won deals
+  const newWonDeals = newShowUps > 0
+    ? Math.round((newShowUps * newCloseRate) / 100)
+    : 0;
 
   // Calculate new AOV
+  // Use AOV from the selected timeframe directly (this is the value of a closed deal)
+  // Apply AOV adjustment if needed
   let newAOV: number | null = null;
+  
+  // Priority 1: Use current AOV from selected timeframe (this is what we want)
   if (current.averageDealValue !== null) {
     newAOV = current.averageDealValue * (1 + adjustments.aov / 100);
-  } else if (adjustments.aov !== 0 && current.wonDeals > 0 && current.totalRevenue > 0) {
-    // If AOV is null but we have revenue data, calculate base AOV
+  }
+  // Priority 2: If AOV is null, try to calculate from current revenue/wonDeals as fallback
+  else if (current.totalRevenue > 0 && current.wonDeals > 0) {
     const baseAOV = current.totalRevenue / current.wonDeals;
     newAOV = baseAOV * (1 + adjustments.aov / 100);
   }
 
-  // Calculate new total revenue
-  const newTotalRevenue = newWonDeals > 0 && newAOV !== null ? newWonDeals * newAOV : 0;
+  // Calculate new total revenue (cash collected)
+  // This is the key connection: more won deals → more cash collected
+  // Cash collected = won deals × AOV (from selected timeframe)
+  let newTotalRevenue = 0;
+  if (newWonDeals > 0) {
+    // Use AOV from selected timeframe
+    if (newAOV !== null && newAOV > 0) {
+      newTotalRevenue = newWonDeals * newAOV;
+    } 
+    // Fallback: if new AOV is null/0, try to use current AOV directly
+    else if (current.averageDealValue !== null && current.averageDealValue > 0) {
+      newTotalRevenue = newWonDeals * current.averageDealValue;
+    }
+    // Last resort: calculate from current revenue if available
+    else if (current.totalRevenue > 0 && current.wonDeals > 0) {
+      const estimatedAOV = current.totalRevenue / current.wonDeals;
+      newTotalRevenue = newWonDeals * estimatedAOV;
+    }
+  }
 
   // Calculate new booking rate
   const newBookingRate =
@@ -458,11 +485,11 @@ function calculateProjectedMetrics(
 
   return {
     speedToLead: current.speedToLead, // Unchanged
-    failedPaymentRate: current.failedPaymentRate, // Unchanged
+    failedPaymentAmountYearly: current.failedPaymentAmountYearly, // Unchanged
     bookingRate: newBookingRate,
-    cancellationRate: current.cancellationRate, // Unchanged (assume same cancellation rate)
-    showUpRate: newShowUpRate,
-    closeRate: newCloseRate,
+    cancellationRate: newCancellationRate,
+    showUpRate: newShowUpRate, // Always a number now (never null)
+    closeRate: newCloseRate, // Always a number now (never null)
     crmHygiene: current.crmHygiene, // Unchanged
     averageDealValue: newAOV,
     pipelineVelocity: current.pipelineVelocity, // Unchanged
