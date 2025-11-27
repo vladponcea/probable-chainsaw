@@ -24,7 +24,7 @@ export default function Stepper({
     },
     {
       number: 3,
-      label: 'Close CRM',
+      label: 'CRM',
       completed: closeConnected || currentStep > 3,
     },
     {
@@ -43,34 +43,39 @@ export default function Stepper({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto mb-8">
-      <div className="flex items-center justify-between">
-        {steps.map((step, index) => (
-          <div key={step.number} className="flex items-center flex-1">
-            <div className="flex flex-col items-center flex-1">
+    <div className="w-full max-w-3xl mx-auto mb-12">
+      <div className="flex items-center justify-between relative">
+        {/* Progress Bar Background */}
+        <div className="absolute top-5 left-0 w-full h-0.5 bg-slate-800 -z-10" />
+
+        {steps.map((step, index) => {
+          const isCompleted = step.completed;
+          const isCurrent = step.number === currentStep;
+          const isAccessible = canNavigateToStep(step.number);
+
+          return (
+            <div key={step.number} className="flex flex-col items-center relative z-10">
               <button
-                onClick={() => canNavigateToStep(step.number) && onStepClick?.(step.number)}
-                disabled={!canNavigateToStep(step.number)}
+                onClick={() => isAccessible && onStepClick?.(step.number)}
+                disabled={!isAccessible}
                 className={`
-                  w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm
-                  transition-all duration-200
-                  ${
-                    step.number === currentStep
-                      ? 'bg-primary-600 text-white ring-4 ring-primary-200'
-                      : step.completed
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-200 text-gray-600'
+                  w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm
+                  transition-all duration-300 border-2
+                  ${isCurrent
+                    ? 'bg-primary-500 border-primary-500 text-white shadow-[0_0_20px_rgba(14,165,233,0.5)] scale-110'
+                    : isCompleted
+                      ? 'bg-emerald-500 border-emerald-500 text-white'
+                      : 'bg-slate-900 border-slate-700 text-slate-500'
                   }
-                  ${
-                    canNavigateToStep(step.number)
-                      ? 'cursor-pointer hover:scale-110'
-                      : 'cursor-not-allowed opacity-50'
+                  ${isAccessible
+                    ? 'cursor-pointer hover:border-primary-400'
+                    : 'cursor-not-allowed opacity-50'
                   }
                 `}
               >
-                {step.completed && step.number !== currentStep ? (
+                {isCompleted && !isCurrent ? (
                   <svg
-                    className="w-6 h-6"
+                    className="w-5 h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -87,26 +92,18 @@ export default function Stepper({
                 )}
               </button>
               <span
-                className={`mt-2 text-xs font-medium ${
-                  step.number === currentStep
-                    ? 'text-primary-600'
-                    : step.completed
-                    ? 'text-green-600'
-                    : 'text-gray-500'
-                }`}
+                className={`mt-3 text-xs font-bold uppercase tracking-wider transition-colors duration-300 ${isCurrent
+                    ? 'text-primary-400'
+                    : isCompleted
+                      ? 'text-emerald-400'
+                      : 'text-slate-600'
+                  }`}
               >
                 {step.label}
               </span>
             </div>
-            {index < steps.length - 1 && (
-              <div
-                className={`flex-1 h-1 mx-2 ${
-                  step.completed ? 'bg-green-500' : 'bg-gray-200'
-                }`}
-              />
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

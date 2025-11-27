@@ -215,10 +215,10 @@ export default function OnboardingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+          <p className="mt-4 text-slate-400">Loading...</p>
         </div>
       </div>
     );
@@ -226,9 +226,9 @@ export default function OnboardingPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <div className="text-red-600 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="bg-slate-900/50 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-slate-800 max-w-md w-full animate-fade-in">
+          <div className="text-rose-500 mb-4">
             <svg
               className="w-12 h-12 mx-auto"
               fill="none"
@@ -243,11 +243,11 @@ export default function OnboardingPage() {
               />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+          <h2 className="text-xl font-bold text-white mb-2 text-center">
             Error
           </h2>
-          <p className="text-gray-600">{error}</p>
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-slate-400 text-center">{error}</p>
+          <p className="text-sm text-slate-500 mt-4 text-center">
             The onboarding token may be invalid or expired.
           </p>
         </div>
@@ -255,11 +255,12 @@ export default function OnboardingPage() {
     );
   }
 
+  // Main render
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-transparent py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+        <div className="bg-slate-900/50 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-800 p-8 md:p-12 animate-slide-up">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight mb-12 text-center">
             Connect Your Tools
           </h1>
 
@@ -271,34 +272,34 @@ export default function OnboardingPage() {
             onStepClick={handleStepClick}
           />
 
-          <div className="mt-8">
+          <div className="mt-12">
             {/* Step 1: Introduction */}
             {currentStep === 1 && (
-              <div className="space-y-6">
+              <div className="space-y-8 animate-fade-in">
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  <h2 className="text-3xl font-bold text-white mb-6">
                     Connect your tools to generate your free ops dashboard
                   </h2>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-slate-300 text-lg leading-relaxed mb-6">
                     Welcome! You're here to connect your essential business
                     tools so we can generate a comprehensive operations dashboard
                     for you. This dashboard will show you key performance
                     indicators (KPIs) and help you identify opportunities where
                     you might be leaving money on the table.
                   </p>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-slate-300 text-lg leading-relaxed">
                     By connecting Calendly, Close CRM, and Stripe, we'll analyze your
                     sales pipeline, call metrics, lead conversion rates, payment data,
                     and more to give you actionable insights.
                   </p>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-4">
                   <button
                     onClick={() => setCurrentStep(2)}
-                    className="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+                    className="px-8 py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-500 transition-all shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 hover:-translate-y-1"
                   >
-                    Continue
+                    Get Started
                   </button>
                 </div>
               </div>
@@ -306,12 +307,12 @@ export default function OnboardingPage() {
 
             {/* Step 2: Calendly Integration */}
             {currentStep === 2 && (
-              <div className="space-y-6">
+              <div className="space-y-8 animate-fade-in">
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  <h2 className="text-3xl font-bold text-white mb-4">
                     Step 2 – Connect Calendly
                   </h2>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-slate-300 text-lg leading-relaxed">
                     Connect your Calendly account to track booked calls,
                     cancellations, and show-up rates. This data helps us
                     calculate important metrics like call completion rates and
@@ -320,10 +321,10 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Security Notice */}
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 backdrop-blur-sm">
                   <div className="flex items-start">
                     <svg
-                      className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                      className="w-6 h-6 text-blue-400 mr-4 mt-1 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -336,25 +337,25 @@ export default function OnboardingPage() {
                       />
                     </svg>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                      <h3 className="text-lg font-bold text-blue-100 mb-3">
                         API Token Security & Data Access
                       </h3>
-                      <p className="text-blue-800 mb-3">
+                      <p className="text-blue-200 mb-4 leading-relaxed">
                         <strong>Note:</strong> Calendly does not support restricted API tokens with limited permissions. Personal Access Tokens (PATs) grant access based on your user role. However, we want you to know exactly how we use your token.
                       </p>
-                      <div className="bg-white rounded-lg p-4 border border-blue-100">
-                        <p className="text-sm font-semibold text-blue-900 mb-2">
+                      <div className="bg-slate-900/50 rounded-xl p-4 border border-blue-500/20 mb-4">
+                        <p className="text-sm font-bold text-blue-100 mb-2">
                           We only <strong>READ</strong> the following data:
                         </p>
-                        <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                        <ul className="list-disc list-inside text-sm text-blue-200 space-y-1">
                           <li><strong>Scheduled Events</strong> - Read your scheduled meetings and their status</li>
                         </ul>
                       </div>
-                      <div className="mt-3 space-y-2">
-                        <p className="text-sm text-blue-700">
+                      <div className="space-y-2">
+                        <p className="text-sm text-blue-300">
                           <strong>Important:</strong> We <strong>never</strong> create, modify, or delete any data in your Calendly account. We can only read scheduled events to calculate your booking and cancellation metrics.
                         </p>
-                        <p className="text-sm text-blue-700">
+                        <p className="text-sm text-blue-300">
                           <strong>Security Best Practice:</strong> We recommend creating a dedicated Personal Access Token specifically for this integration. You can monitor its usage and revoke it anytime in Calendly Settings → Integrations → API & Webhooks.
                         </p>
                       </div>
@@ -362,12 +363,12 @@ export default function OnboardingPage() {
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
+                <div className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-lg">
                   <div className="px-6 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-bold text-white">
                       Calendly Scheduling Walkthrough
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1 mb-4">
+                    <p className="text-sm text-slate-400 mt-1 mb-4">
                       Watch this quick Loom to see how to review your event types and scheduling setup inside Calendly.
                     </p>
                   </div>
@@ -375,16 +376,16 @@ export default function OnboardingPage() {
                     className="w-full"
                     dangerouslySetInnerHTML={{
                       __html:
-                        '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/dbddeb291b274ff1b9616d20a34a9cc6" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
+                        '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/ddddc95b67af403da31aba438129ba21" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
                     }}
                   />
                 </div>
 
                 {calendlySuccess ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6 animate-fade-in">
                     <div className="flex items-center">
                       <svg
-                        className="w-6 h-6 text-green-600 mr-2"
+                        className="w-6 h-6 text-emerald-400 mr-3"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -396,17 +397,17 @@ export default function OnboardingPage() {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span className="text-green-800 font-semibold">
+                      <span className="text-emerald-200 font-bold">
                         Calendly connected successfully!
                       </span>
                     </div>
                   </div>
                 ) : (
-                  <form onSubmit={handleCalendlyConnect} className="space-y-4">
+                  <form onSubmit={handleCalendlyConnect} className="space-y-6">
                     <div>
                       <label
                         htmlFor="calendly-key"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className="block text-sm font-bold text-slate-300 mb-2 uppercase tracking-wide"
                       >
                         Calendly API key
                       </label>
@@ -415,11 +416,11 @@ export default function OnboardingPage() {
                         type="password"
                         value={calendlyApiKey}
                         onChange={(e) => setCalendlyApiKey(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                        className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white placeholder-slate-600 transition-all"
                         placeholder="Enter your Calendly API key"
                       />
                       {calendlyError && (
-                        <p className="mt-2 text-sm text-red-600">
+                        <p className="mt-2 text-sm text-rose-400 font-medium animate-pulse">
                           {calendlyError}
                         </p>
                       )}
@@ -427,26 +428,26 @@ export default function OnboardingPage() {
                     <button
                       type="submit"
                       disabled={calendlyLoading}
-                      className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-6 py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-500 transition-all shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1"
                     >
                       {calendlyLoading ? 'Connecting...' : 'Connect Calendly'}
                     </button>
                   </form>
                 )}
 
-                <div className="flex justify-between">
+                <div className="flex justify-between pt-4 border-t border-slate-800">
                   <button
                     onClick={() => setCurrentStep(1)}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                    className="px-6 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700 hover:text-white transition-all"
                   >
                     Back
                   </button>
                   {calendlySuccess && (
                     <button
                       onClick={() => setCurrentStep(3)}
-                      className="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+                      className="px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-500 transition-all shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 hover:-translate-y-1"
                     >
-                      Continue to Close CRM
+                      Continue to CRM
                     </button>
                   )}
                 </div>
@@ -455,41 +456,48 @@ export default function OnboardingPage() {
 
             {/* Step 3: CRM Integration */}
             {currentStep === 3 && (
-              <div className="space-y-6">
+              <div className="space-y-8 animate-fade-in">
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  <h2 className="text-3xl font-bold text-white mb-4">
                     Step 3 – Connect CRM
                   </h2>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-slate-300 text-lg leading-relaxed mb-8">
                     Connect your CRM to sync leads, pipeline data, and
                     CRM hygiene metrics. This enables us to track your sales
                     funnel, conversion rates, and identify opportunities for
                     improvement.
                   </p>
 
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="mb-8">
+                    <label className="block text-sm font-bold text-slate-300 mb-2 uppercase tracking-wide">
                       Choose your CRM
                     </label>
-                    <select
-                      value={selectedCrm}
-                      onChange={(e) => setSelectedCrm(e.target.value as 'close' | 'ghl')}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                      disabled={closeSuccess || ghlSuccess}
-                    >
-                      <option value="close">Close CRM</option>
-                      <option value="ghl">GoHighLevel</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={selectedCrm}
+                        onChange={(e) => setSelectedCrm(e.target.value as 'close' | 'ghl')}
+                        className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white appearance-none cursor-pointer transition-all"
+                        disabled={closeSuccess || ghlSuccess}
+                      >
+                        <option value="close">Close CRM</option>
+                        <option value="ghl">GoHighLevel</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {selectedCrm === 'close' ? (
                   <>
                     {/* Security Notice for Close */}
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 backdrop-blur-sm">
                       <div className="flex items-start">
                         <svg
-                          className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                          className="w-6 h-6 text-blue-400 mr-4 mt-1 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -502,27 +510,27 @@ export default function OnboardingPage() {
                           />
                         </svg>
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                          <h3 className="text-lg font-bold text-blue-100 mb-3">
                             API Key Security & Data Access
                           </h3>
-                          <p className="text-blue-800 mb-3">
+                          <p className="text-blue-200 mb-4 leading-relaxed">
                             <strong>Note:</strong> Close CRM does not support restricted API keys with limited permissions. All API keys provide full account access. However, we want you to know exactly how we use your API key.
                           </p>
-                          <div className="bg-white rounded-lg p-4 border border-blue-100">
-                            <p className="text-sm font-semibold text-blue-900 mb-2">
+                          <div className="bg-slate-900/50 rounded-xl p-4 border border-blue-500/20 mb-4">
+                            <p className="text-sm font-bold text-blue-100 mb-2">
                               We only <strong>READ</strong> the following data:
                             </p>
-                            <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                            <ul className="list-disc list-inside text-sm text-blue-200 space-y-1">
                               <li><strong>Leads</strong> - Read lead information and status</li>
                               <li><strong>Opportunities (Deals)</strong> - Read deal values, stages, and status</li>
                               <li><strong>Activities</strong> - Read calls, emails, and SMS to calculate first contact dates</li>
                             </ul>
                           </div>
-                          <div className="mt-3 space-y-2">
-                            <p className="text-sm text-blue-700">
+                          <div className="space-y-2">
+                            <p className="text-sm text-blue-300">
                               <strong>Important:</strong> We <strong>never</strong> create, modify, or delete any data in your Close CRM account. We can only read the data needed to calculate your metrics.
                             </p>
-                            <p className="text-sm text-blue-700">
+                            <p className="text-sm text-blue-300">
                               <strong>Security Best Practice:</strong> We recommend creating a dedicated API key specifically for this integration. You can monitor its usage and revoke it anytime in Close CRM Settings → Developer → API Keys.
                             </p>
                           </div>
@@ -530,12 +538,12 @@ export default function OnboardingPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
+                    <div className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-lg">
                       <div className="px-6 pt-6">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-bold text-white">
                           Close CRM API Key Walkthrough
                         </h3>
-                        <p className="text-sm text-gray-600 mt-1 mb-4">
+                        <p className="text-sm text-slate-400 mt-1 mb-4">
                           Watch this Loom to see exactly where to find your Close CRM API key.
                         </p>
                       </div>
@@ -549,10 +557,10 @@ export default function OnboardingPage() {
                     </div>
 
                     {closeSuccess ? (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6 animate-fade-in">
                         <div className="flex items-center">
                           <svg
-                            className="w-6 h-6 text-green-600 mr-2"
+                            className="w-6 h-6 text-emerald-400 mr-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -564,17 +572,17 @@ export default function OnboardingPage() {
                               d="M5 13l4 4L19 7"
                             />
                           </svg>
-                          <span className="text-green-800 font-semibold">
+                          <span className="text-emerald-200 font-bold">
                             Close CRM connected successfully!
                           </span>
                         </div>
                       </div>
                     ) : (
-                      <form onSubmit={handleCloseConnect} className="space-y-4">
+                      <form onSubmit={handleCloseConnect} className="space-y-6">
                         <div>
                           <label
                             htmlFor="close-key"
-                            className="block text-sm font-medium text-gray-700 mb-2"
+                            className="block text-sm font-bold text-slate-300 mb-2 uppercase tracking-wide"
                           >
                             Close CRM API key
                           </label>
@@ -583,11 +591,11 @@ export default function OnboardingPage() {
                             type="password"
                             value={closeApiKey}
                             onChange={(e) => setCloseApiKey(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white placeholder-slate-600 transition-all"
                             placeholder="Enter your Close CRM API key"
                           />
                           {closeError && (
-                            <p className="mt-2 text-sm text-red-600">
+                            <p className="mt-2 text-sm text-rose-400 font-medium animate-pulse">
                               {closeError}
                             </p>
                           )}
@@ -595,7 +603,7 @@ export default function OnboardingPage() {
                         <button
                           type="submit"
                           disabled={closeLoading}
-                          className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-6 py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-500 transition-all shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1"
                         >
                           {closeLoading ? 'Connecting...' : 'Connect Close CRM'}
                         </button>
@@ -605,10 +613,10 @@ export default function OnboardingPage() {
                 ) : (
                   <>
                     {/* Security Notice for GHL */}
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 backdrop-blur-sm">
                       <div className="flex items-start">
                         <svg
-                          className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                          className="w-6 h-6 text-blue-400 mr-4 mt-1 flex-shrink-0"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -621,17 +629,17 @@ export default function OnboardingPage() {
                           />
                         </svg>
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                          <h3 className="text-lg font-bold text-blue-100 mb-3">
                             API Key Security & Data Access
                           </h3>
-                          <p className="text-blue-800 mb-3">
+                          <p className="text-blue-200 mb-4 leading-relaxed">
                             <strong>Note:</strong> We use your GoHighLevel API Key (V2) to access your account data.
                           </p>
-                          <div className="bg-white rounded-lg p-4 border border-blue-100">
-                            <p className="text-sm font-semibold text-blue-900 mb-2">
+                          <div className="bg-slate-900/50 rounded-xl p-4 border border-blue-500/20 mb-4">
+                            <p className="text-sm font-bold text-blue-100 mb-2">
                               We only <strong>READ</strong> the following data:
                             </p>
-                            <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                            <ul className="list-disc list-inside text-sm text-blue-200 space-y-1">
                               <li><strong>Contacts</strong> - Read contact information</li>
                               <li><strong>Opportunities</strong> - Read opportunity values, stages, and status</li>
                             </ul>
@@ -640,12 +648,12 @@ export default function OnboardingPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
+                    <div className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-lg">
                       <div className="px-6 pt-6">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-bold text-white">
                           GoHighLevel API Key Walkthrough
                         </h3>
-                        <p className="text-sm text-gray-600 mt-1 mb-4">
+                        <p className="text-sm text-slate-400 mt-1 mb-4">
                           Watch this Loom to see exactly where to find your GoHighLevel API Key.
                         </p>
                       </div>
@@ -659,10 +667,10 @@ export default function OnboardingPage() {
                     </div>
 
                     {ghlSuccess ? (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6 animate-fade-in">
                         <div className="flex items-center">
                           <svg
-                            className="w-6 h-6 text-green-600 mr-2"
+                            className="w-6 h-6 text-emerald-400 mr-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -674,17 +682,17 @@ export default function OnboardingPage() {
                               d="M5 13l4 4L19 7"
                             />
                           </svg>
-                          <span className="text-green-800 font-semibold">
+                          <span className="text-emerald-200 font-bold">
                             GoHighLevel connected successfully!
                           </span>
                         </div>
                       </div>
                     ) : (
-                      <form onSubmit={handleGhlConnect} className="space-y-4">
+                      <form onSubmit={handleGhlConnect} className="space-y-6">
                         <div>
                           <label
                             htmlFor="ghl-key"
-                            className="block text-sm font-medium text-gray-700 mb-2"
+                            className="block text-sm font-bold text-slate-300 mb-2 uppercase tracking-wide"
                           >
                             GoHighLevel API Key (V2)
                           </label>
@@ -693,11 +701,11 @@ export default function OnboardingPage() {
                             type="password"
                             value={ghlApiKey}
                             onChange={(e) => setGhlApiKey(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white placeholder-slate-600 transition-all"
                             placeholder="Enter your GHL API Key"
                           />
                           {ghlError && (
-                            <p className="mt-2 text-sm text-red-600">
+                            <p className="mt-2 text-sm text-rose-400 font-medium animate-pulse">
                               {ghlError}
                             </p>
                           )}
@@ -705,7 +713,7 @@ export default function OnboardingPage() {
                         <button
                           type="submit"
                           disabled={ghlLoading}
-                          className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-6 py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-500 transition-all shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1"
                         >
                           {ghlLoading ? 'Connecting...' : 'Connect GoHighLevel'}
                         </button>
@@ -714,17 +722,17 @@ export default function OnboardingPage() {
                   </>
                 )}
 
-                <div className="flex justify-between">
+                <div className="flex justify-between pt-4 border-t border-slate-800">
                   <button
                     onClick={() => setCurrentStep(2)}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                    className="px-6 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700 hover:text-white transition-all"
                   >
                     Back
                   </button>
                   {(closeSuccess || ghlSuccess) && (
                     <button
                       onClick={() => setCurrentStep(4)}
-                      className="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+                      className="px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-500 transition-all shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 hover:-translate-y-1"
                     >
                       Continue to Stripe
                     </button>
@@ -735,12 +743,12 @@ export default function OnboardingPage() {
 
             {/* Step 4: Stripe Integration */}
             {currentStep === 4 && (
-              <div className="space-y-6">
+              <div className="space-y-8 animate-fade-in">
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  <h2 className="text-3xl font-bold text-white mb-4">
                     Step 4 – Connect Stripe
                   </h2>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-slate-300 text-lg leading-relaxed">
                     Connect your Stripe account to track payments, revenue, and
                     financial metrics. This enables us to calculate important KPIs
                     like revenue per customer, payment success rates, and identify
@@ -749,10 +757,10 @@ export default function OnboardingPage() {
                 </div>
 
                 {/* Security Notice */}
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6 backdrop-blur-sm">
                   <div className="flex items-start">
                     <svg
-                      className="w-6 h-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0"
+                      className="w-6 h-6 text-blue-400 mr-4 mt-1 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -765,35 +773,35 @@ export default function OnboardingPage() {
                       />
                     </svg>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-blue-900 mb-3">
+                      <h3 className="text-lg font-bold text-blue-100 mb-3">
                         Secure Your API Key with Restricted Access
                       </h3>
-                      <p className="text-blue-800 mb-3">
+                      <p className="text-blue-200 mb-4 leading-relaxed">
                         <strong>You can restrict access to your Stripe account</strong> by creating a restricted API key with limited permissions. This is highly recommended for security.
                       </p>
-                      <div className="bg-white rounded-lg p-4 border border-blue-100">
-                        <p className="text-sm font-semibold text-blue-900 mb-2">
+                      <div className="bg-slate-900/50 rounded-xl p-4 border border-blue-500/20 mb-4">
+                        <p className="text-sm font-bold text-blue-100 mb-2">
                           We only require <strong>read-only</strong> access to:
                         </p>
-                        <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+                        <ul className="list-disc list-inside text-sm text-blue-200 space-y-1">
                           <li><strong>Charges</strong> - Read charges</li>
                           <li><strong>Subscriptions</strong> - Read subscriptions</li>
                           <li><strong>Invoices</strong> - Read invoices</li>
                         </ul>
                       </div>
-                      <p className="text-sm text-blue-700 mt-3">
+                      <p className="text-sm text-blue-300 mt-3">
                         <strong>Important:</strong> We cannot create, modify, or delete any data in your Stripe account. We can only read the data needed to calculate your metrics.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-white shadow border border-gray-200 overflow-hidden">
+                <div className="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-lg">
                   <div className="px-6 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-bold text-white">
                       Stripe Settings Walkthrough
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1 mb-4">
+                    <p className="text-sm text-slate-400 mt-1 mb-4">
                       Watch this video to see exactly where to pull your Stripe API keys.
                     </p>
                   </div>
@@ -811,115 +819,32 @@ export default function OnboardingPage() {
                 </div>
 
                 {stripeSuccess ? (
-                  <div className="space-y-4">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center">
-                        <svg
-                          className="w-6 h-6 text-green-600 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <span className="text-green-800 font-semibold">
-                          Stripe connected successfully!
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-blue-900 mb-4">
-                        You're all set! Your data will start syncing soon.
-                      </h3>
-                      <div className="space-y-2">
-                        <div className="flex items-center text-green-700">
-                          <svg
-                            className="w-5 h-5 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          Calendly connected
-                        </div>
-                        <div className="flex items-center text-green-700">
-                          <svg
-                            className="w-5 h-5 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          Close connected
-                        </div>
-                        <div className="flex items-center text-green-700">
-                          <svg
-                            className="w-5 h-5 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          {client?.ghlConnected ? 'GoHighLevel connected' : 'Close connected'}
-                        </div>
-                        <div className="flex items-center text-green-700">
-                          <svg
-                            className="w-5 h-5 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          Stripe connected
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center">
-                      <button
-                        onClick={() => router.push(`/dashboard/${token}`)}
-                        className="px-8 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6 animate-fade-in">
+                    <div className="flex items-center">
+                      <svg
+                        className="w-6 h-6 text-emerald-400 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        Go to dashboard
-                      </button>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-emerald-200 font-bold">
+                        Stripe connected successfully!
+                      </span>
                     </div>
                   </div>
                 ) : (
-                  <form onSubmit={handleStripeConnect} className="space-y-4">
+                  <form onSubmit={handleStripeConnect} className="space-y-6">
                     <div>
                       <label
                         htmlFor="stripe-key"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className="block text-sm font-bold text-slate-300 mb-2 uppercase tracking-wide"
                       >
                         Stripe API key
                       </label>
@@ -928,11 +853,11 @@ export default function OnboardingPage() {
                         type="password"
                         value={stripeApiKey}
                         onChange={(e) => setStripeApiKey(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                        placeholder="Enter your Stripe API key (sk_ or rk_ for restricted keys)"
+                        className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white placeholder-slate-600 transition-all"
+                        placeholder="Enter your Stripe API key"
                       />
                       {stripeError && (
-                        <p className="mt-2 text-sm text-red-600">
+                        <p className="mt-2 text-sm text-rose-400 font-medium animate-pulse">
                           {stripeError}
                         </p>
                       )}
@@ -940,20 +865,29 @@ export default function OnboardingPage() {
                     <button
                       type="submit"
                       disabled={stripeLoading}
-                      className="w-full px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-6 py-4 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-500 transition-all shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1"
                     >
                       {stripeLoading ? 'Connecting...' : 'Connect Stripe'}
                     </button>
                   </form>
                 )}
 
-                <div className="flex justify-start">
+                <div className="flex justify-between pt-4 border-t border-slate-800">
                   <button
                     onClick={() => setCurrentStep(3)}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                    className="px-6 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700 hover:text-white transition-all"
                   >
                     Back
                   </button>
+                  {stripeSuccess && (
+                    <div className="flex items-center text-emerald-400 font-bold animate-pulse">
+                      <span className="mr-2">Redirecting to dashboard...</span>
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -963,4 +897,3 @@ export default function OnboardingPage() {
     </div>
   );
 }
-
