@@ -376,7 +376,7 @@ export default function OnboardingPage() {
                     className="w-full"
                     dangerouslySetInnerHTML={{
                       __html:
-                        '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/ddddc95b67af403da31aba438129ba21" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
+                        '<div class="lo-emb-vid" style="position: relative; padding-bottom: 74.96025437201908%; height: 0;"><iframe src="https://www.loom.com/embed/dbddeb291b274ff1b9616d20a34a9cc6" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>',
                     }}
                   />
                 </div>
