@@ -94,6 +94,16 @@ export default function MetricsComparison({ metrics, avgLeadsPerMonth }: Metrics
     handleAdjustmentChange(key, adjustment);
   };
 
+  const baselineMetrics = useMemo(() => {
+    return calculateProjectedMetrics(metrics, {
+      leads: 0,
+      bookingRate: 0,
+      showUpRate: 0,
+      closeRate: 0,
+      aov: 0,
+    }, baseMetrics);
+  }, [metrics, baseMetrics]);
+
   return (
     <div className="mt-12 animate-fade-in">
       <div className="mb-8">
@@ -191,33 +201,33 @@ export default function MetricsComparison({ metrics, avgLeadsPerMonth }: Metrics
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <MetricCard
               title="Projected Monthly Revenue"
-              value={projectedMetrics.totalRevenue}
+              value={projectedMetrics.totalRevenue - baselineMetrics.totalRevenue}
               unit="$"
-              subtitle="Projected monthly cash collected"
+              subtitle={`Base: $${baselineMetrics.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
               trend="up"
               prefix="+"
             />
             <MetricCard
               title="Projected Monthly Booked Calls"
-              value={projectedMetrics.bookedCalls}
+              value={projectedMetrics.bookedCalls - baselineMetrics.bookedCalls}
               unit=""
-              subtitle="Projected booked calls / month"
+              subtitle={`Base: ${baselineMetrics.bookedCalls.toLocaleString()}`}
               trend="up"
               prefix="+"
             />
             <MetricCard
               title="Projected Monthly Show Ups"
-              value={projectedMetrics.showUps}
+              value={projectedMetrics.showUps - baselineMetrics.showUps}
               unit=""
-              subtitle="Projected show ups / month"
+              subtitle={`Base: ${baselineMetrics.showUps.toLocaleString()}`}
               trend="up"
               prefix="+"
             />
             <MetricCard
               title="Projected Monthly Won Deals"
-              value={projectedMetrics.wonDeals}
+              value={projectedMetrics.wonDeals - baselineMetrics.wonDeals}
               unit=""
-              subtitle="Projected won deals / month"
+              subtitle={`Base: ${baselineMetrics.wonDeals.toLocaleString()}`}
               trend="up"
               prefix="+"
             />
