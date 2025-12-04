@@ -118,21 +118,7 @@ export default function SyncStatus({
             </div>
           </div>
 
-          {/* Logs */}
-          {progress.logs.length > 0 && (
-            <div className="bg-slate-800/50 rounded border border-slate-700 p-3 max-h-48 overflow-y-auto">
-              <div className="space-y-1">
-                {progress.logs.map((log, index) => (
-                  <div
-                    key={index}
-                    className="text-xs font-mono text-slate-300"
-                  >
-                    {log}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+
         </div>
       )}
 

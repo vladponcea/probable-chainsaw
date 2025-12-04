@@ -32,10 +32,16 @@ export default function DashboardPage() {
       fetchClientData();
       fetchSyncStatus();
 
-      // Auto-sync on first load
+      // Auto-sync logic: 1x per day
       if (!hasSyncedRef.current) {
         hasSyncedRef.current = true;
-        handleSync(true); // Pass true to indicate auto-sync
+
+        const lastSyncDate = localStorage.getItem(`lastAutoSync_${token}`);
+        const today = new Date().toDateString();
+
+        if (lastSyncDate !== today) {
+          handleSync(true); // Pass true to indicate auto-sync
+        }
       }
     }
   }, [token]);
@@ -130,6 +136,12 @@ export default function DashboardPage() {
             if (progressInterval) clearInterval(progressInterval);
             if (timeoutId) clearTimeout(timeoutId);
             setSyncing(false);
+
+            if (progress.status === 'completed') {
+              // Update local storage to prevent re-sync today
+              localStorage.setItem(`lastAutoSync_${token}`, new Date().toDateString());
+            }
+
             // Refresh metrics and sync status after sync completes
             await Promise.all([fetchMetrics(), fetchSyncStatus()]);
             // Clear progress after 5 seconds
