@@ -11,7 +11,7 @@ export default function AdminPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  
+
   // Create form state
   const [formData, setFormData] = useState<CreateClientRequest>({
     email: '',
@@ -19,6 +19,11 @@ export default function AdminPage() {
   });
 
   useEffect(() => {
+    const isAuthenticated = localStorage.getItem('admin_authenticated');
+    if (!isAuthenticated) {
+      window.location.href = '/admin/login';
+      return;
+    }
     fetchClients();
   }, []);
 
@@ -351,11 +356,10 @@ export default function AdminPage() {
                       <td className="px-3 py-4">
                         <div className="flex items-center space-x-1">
                           <span
-                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
-                              client.calendlyConnected
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${client.calendlyConnected
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-gray-100 text-gray-600'
-                            }`}
+                              }`}
                             title={client.calendlyConnected ? 'Calendly Connected' : 'Calendly Not Connected'}
                           >
                             {client.calendlyConnected ? (
@@ -375,11 +379,10 @@ export default function AdminPage() {
                             )}
                           </span>
                           <span
-                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
-                              client.closeConnected
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${client.closeConnected
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-gray-100 text-gray-600'
-                            }`}
+                              }`}
                             title={client.closeConnected ? 'Close Connected' : 'Close Not Connected'}
                           >
                             {client.closeConnected ? (
@@ -399,11 +402,10 @@ export default function AdminPage() {
                             )}
                           </span>
                           <span
-                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
-                              client.stripeConnected
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${client.stripeConnected
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-gray-100 text-gray-600'
-                            }`}
+                              }`}
                             title={client.stripeConnected ? 'Stripe Connected' : 'Stripe Not Connected'}
                           >
                             {client.stripeConnected ? (

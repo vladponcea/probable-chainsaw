@@ -6,6 +6,7 @@ import { SyncModule } from './modules/sync/sync.module';
 import { MockDataModule } from './modules/mock-data/mock-data.module';
 import { StatusMappingModule } from './modules/status-mapping/status-mapping.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { PrismaModule } from './prisma/prisma.module';
     SyncModule,
     MockDataModule,
     StatusMappingModule,
+    AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
 

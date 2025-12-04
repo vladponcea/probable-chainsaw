@@ -299,3 +299,10 @@ export const statusMappingApi = {
   },
 };
 
+export const authApi = {
+  login: async (password: string): Promise<{ success: boolean }> => {
+    const response = await api.post('/auth/login', { password });
+    return response.data;
+  },
+};
+
