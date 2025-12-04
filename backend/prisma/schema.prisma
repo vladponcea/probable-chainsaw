@@ -14,6 +14,7 @@ model Client {
   id                String   @id @default(cuid())
   email             String?  @unique
   companyName       String?
+  phone             String?
   onboardingToken   String   @unique
   calendlyConnected Boolean  @default(false)
   closeConnected    Boolean  @default(false)

@@ -8,5 +8,9 @@ export class CreateClientDto {
   @IsString()
   @IsOptional()
   companyName?: string;
+
+  @IsString()
+  @IsOptional()
+  phone?: string;
 }
 

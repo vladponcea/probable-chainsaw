@@ -13,6 +13,7 @@ export interface Client {
   clientId: string;
   email: string | null;
   companyName: string | null;
+  phone: string | null;
   calendlyConnected: boolean;
   closeConnected: boolean;
   ghlConnected: boolean;
@@ -23,6 +24,7 @@ export interface AdminClient {
   id: string;
   email: string | null;
   companyName: string | null;
+  phone: string | null;
   onboardingToken: string;
   calendlyConnected: boolean;
   closeConnected: boolean;
@@ -40,6 +42,7 @@ export interface AdminClient {
 export interface CreateClientRequest {
   email?: string;
   companyName?: string;
+  phone?: string;
 }
 
 export const clientsApi = {

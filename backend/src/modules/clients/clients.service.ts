@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ClientsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createClientDto: CreateClientDto) {
     const onboardingToken = uuidv4();
@@ -14,6 +14,7 @@ export class ClientsService {
       data: {
         email: createClientDto.email,
         companyName: createClientDto.companyName,
+        phone: createClientDto.phone,
         onboardingToken,
         calendlyConnected: false,
         closeConnected: false,
@@ -41,14 +42,14 @@ export class ClientsService {
       throw new NotFoundException('Client not found with this onboarding token');
     }
 
-      return {
-        clientId: client.id,
-        email: client.email,
-        companyName: client.companyName,
-        calendlyConnected: client.calendlyConnected,
-        closeConnected: client.closeConnected,
-        stripeConnected: client.stripeConnected,
-      };
+    return {
+      clientId: client.id,
+      email: client.email,
+      companyName: client.companyName,
+      calendlyConnected: client.calendlyConnected,
+      closeConnected: client.closeConnected,
+      stripeConnected: client.stripeConnected,
+    };
   }
 
   async findById(id: string) {
