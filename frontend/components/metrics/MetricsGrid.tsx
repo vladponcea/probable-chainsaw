@@ -20,6 +20,18 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
     return isMet ? 'met' : 'below';
   };
 
+  const capValue = (value: number | null): { value: number | null; isCapped: boolean } => {
+    if (value === null) return { value: null, isCapped: false };
+    if (value > 100) return { value: 100, isCapped: true };
+    return { value, isCapped: false };
+  };
+
+  const bookingRate = capValue(metrics.bookingRate);
+  const cancellationRate = capValue(metrics.cancellationRate);
+  const showUpRate = capValue(metrics.showUpRate);
+  const closeRate = capValue(metrics.closeRate);
+  const crmHygiene = capValue(metrics.crmHygiene);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <MetricCard
@@ -58,48 +70,53 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
       />
       <MetricCard
         title="Booking Rate"
-        value={metrics.bookingRate}
+        value={bookingRate.value}
         unit="%"
         subtitle="Booked calls / Total leads"
         isLoading={isLoading}
         target="> 15%"
-        targetStatus={checkTarget(metrics.bookingRate, 15, 'greater')}
+        targetStatus={checkTarget(bookingRate.value, 15, 'greater')}
+        isCapped={bookingRate.isCapped}
       />
       <MetricCard
         title="Cancellation Rate"
-        value={metrics.cancellationRate}
+        value={cancellationRate.value}
         unit="%"
         subtitle="Cancelled calls / Booked calls"
         isLoading={isLoading}
         target="< 20%"
-        targetStatus={checkTarget(metrics.cancellationRate, 20, 'less')}
+        targetStatus={checkTarget(cancellationRate.value, 20, 'less')}
+        isCapped={cancellationRate.isCapped}
       />
       <MetricCard
         title="Show Up Rate"
-        value={metrics.showUpRate}
+        value={showUpRate.value}
         unit="%"
         subtitle="Customers who showed up / Total scheduled calls"
         isLoading={isLoading}
         target="> 60%"
-        targetStatus={checkTarget(metrics.showUpRate, 60, 'greater')}
+        targetStatus={checkTarget(showUpRate.value, 60, 'greater')}
+        isCapped={showUpRate.isCapped}
       />
       <MetricCard
         title="Close Rate"
-        value={metrics.closeRate}
+        value={closeRate.value}
         unit="%"
         subtitle="Won deals / Show ups"
         isLoading={isLoading}
         target="> 35%"
-        targetStatus={checkTarget(metrics.closeRate, 35, 'greater')}
+        targetStatus={checkTarget(closeRate.value, 35, 'greater')}
+        isCapped={closeRate.isCapped}
       />
       <MetricCard
         title="CRM Hygiene"
-        value={metrics.crmHygiene}
+        value={crmHygiene.value}
         unit="%"
         subtitle="Data quality score"
         isLoading={isLoading}
         target="> 80%"
-        targetStatus={checkTarget(metrics.crmHygiene, 80, 'greater')}
+        targetStatus={checkTarget(crmHygiene.value, 80, 'greater')}
+        isCapped={crmHygiene.isCapped}
       />
       <MetricCard
         title="Average Deal Value"
