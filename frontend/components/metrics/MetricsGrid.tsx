@@ -38,8 +38,8 @@ export default function MetricsGrid({ metrics, isLoading, avgLeadsPerMonth }: Me
       />
       <MetricCard
         title="Speed to Lead"
-        value={metrics.speedToLead}
-        unit="hours"
+        value={metrics.speedToLead !== null ? metrics.speedToLead * 60 : null}
+        unit="min"
         subtitle="Average time from lead creation to first contact"
         isLoading={isLoading}
         target="< 2min"

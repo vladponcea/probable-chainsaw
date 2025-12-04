@@ -9,6 +9,7 @@ interface MetricCardProps {
   target?: string;
   targetStatus?: 'met' | 'below' | null;
   isLoading?: boolean;
+  prefix?: string;
 }
 
 export default function MetricCard({
@@ -20,24 +21,53 @@ export default function MetricCard({
   target,
   targetStatus,
   isLoading,
+  prefix,
 }: MetricCardProps) {
   const formatValue = () => {
     if (isLoading) return '...';
     if (value === null || value === undefined) return 'N/A';
+
     if (typeof value === 'number') {
+      // Speed to Lead special handling (minutes, even numbers)
+      if (title === 'Speed to Lead' || unit === 'min') {
+        const evenValue = Math.round(value / 2) * 2;
+        return `${evenValue} min`;
+      }
+
+      // Excluded metrics (keep decimals)
+      const keepDecimals = [
+        'Total Revenue',
+        'Failed Payment Amount (Yearly)',
+        'Average Deal Value',
+        'Pipeline Velocity'
+      ].some(t => title.includes(t));
+
+      if (keepDecimals) {
+        if (unit === '$') {
+          return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        if (unit === 'days') {
+          return `${value.toFixed(1)}d`;
+        }
+        return value.toLocaleString();
+      }
+
+      // Default: Floor to whole number
+      const flooredValue = Math.floor(value);
+
       if (unit === '%') {
-        return `${value.toFixed(1)}%`;
+        return `${flooredValue}%`;
       }
       if (unit === '$') {
-        return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `$${flooredValue.toLocaleString()}`;
       }
       if (unit === 'hours') {
-        return `${value.toFixed(1)}h`;
+        return `${flooredValue}h`;
       }
       if (unit === 'days') {
-        return `${value.toFixed(1)}d`;
+        return `${flooredValue}d`;
       }
-      return value.toLocaleString();
+      return flooredValue.toLocaleString();
     }
     return value;
   };
@@ -57,10 +87,10 @@ export default function MetricCard({
       {targetStatus && (
         <div
           className={`absolute top-0 left-0 right-0 h-1 ${targetStatus === 'met'
-              ? 'bg-emerald-500'
-              : targetStatus === 'below'
-                ? 'bg-rose-500'
-                : 'bg-slate-600'
+            ? 'bg-emerald-500'
+            : targetStatus === 'below'
+              ? 'bg-rose-500'
+              : 'bg-slate-600'
             }`}
         />
       )}
@@ -91,12 +121,12 @@ export default function MetricCard({
 
         <div className="flex items-baseline">
           <p className={`text-3xl font-bold tracking-tight ${targetStatus === 'met' ? 'text-emerald-400' :
-              targetStatus === 'below' ? 'text-rose-400' :
-                trend === 'up' ? 'text-emerald-400' :
-                  trend === 'down' ? 'text-rose-400' :
-                    'text-white'
+            targetStatus === 'below' ? 'text-rose-400' :
+              trend === 'up' ? 'text-emerald-400' :
+                trend === 'down' ? 'text-rose-400' :
+                  'text-white'
             }`}>
-            {formatValue()}
+            {prefix}{formatValue()}
           </p>
           {unit && value !== null && !isLoading && (
             <span className="ml-2 text-lg text-slate-500 font-medium">{unit}</span>
@@ -113,8 +143,8 @@ export default function MetricCard({
             <div className="flex items-center justify-between">
               <span className="text-xs text-slate-500 font-medium">Target:</span>
               <span className={`text-xs font-bold ${targetStatus === 'met' ? 'text-emerald-400' :
-                  targetStatus === 'below' ? 'text-rose-400' :
-                    'text-slate-400'
+                targetStatus === 'below' ? 'text-rose-400' :
+                  'text-slate-400'
                 }`}>
                 {target}
               </span>

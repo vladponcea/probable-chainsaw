@@ -10,11 +10,11 @@ interface MetricsComparisonProps {
 }
 
 interface Adjustments {
-  leads: number; // percentage change (0 to 300)
-  bookingRate: number; // percentage change (0 to 300)
-  showUpRate: number; // percentage change (0 to 300)
-  closeRate: number; // percentage change (0 to 300)
-  aov: number; // percentage change (0 to 200)
+  leads: number; // percentage change
+  bookingRate: number; // percentage change
+  showUpRate: number; // percentage change
+  closeRate: number; // percentage change
+  aov: number; // percentage change
 }
 
 interface BaseMetrics {
@@ -28,13 +28,12 @@ interface BaseMetrics {
 export default function MetricsComparison({ metrics, avgLeadsPerMonth }: MetricsComparisonProps) {
   const [adjustments, setAdjustments] = useState<Adjustments>({
     leads: 0,
-    bookingRate: 25,
-    showUpRate: 25,
+    bookingRate: 0,
+    showUpRate: 0,
     closeRate: 0,
     aov: 0,
   });
 
-  // Local state for base metrics to allow manual overrides (e.g. when value is 0)
   const [baseMetrics, setBaseMetrics] = useState<BaseMetrics>({
     leads: avgLeadsPerMonth || 0,
     bookingRate: metrics.bookingRate || 0,
@@ -43,7 +42,6 @@ export default function MetricsComparison({ metrics, avgLeadsPerMonth }: Metrics
     averageDealValue: metrics.averageDealValue || 0,
   });
 
-  // Sync state with props when props change
   useEffect(() => {
     setBaseMetrics({
       leads: avgLeadsPerMonth || 0,
@@ -64,52 +62,22 @@ export default function MetricsComparison({ metrics, avgLeadsPerMonth }: Metrics
     return calculateProjectedMetrics(metrics, adjustments, baseMetrics);
   }, [metrics, adjustments, baseMetrics]);
 
-  const baseProjectedMetrics = useMemo(() => {
-    return calculateProjectedMetrics(metrics, {
-      leads: 0,
-      bookingRate: 0,
-      showUpRate: 0,
-      closeRate: 0,
-      aov: 0,
-    }, baseMetrics);
-  }, [metrics, baseMetrics]);
-
-  const calculateGrowth = (current: number, projected: number) => {
-    if (current === 0) return projected > 0 ? 100 : 0;
-    return ((projected - current) / current) * 100;
-  };
-
-  const formatGrowth = (val: number) => {
-    const sign = val >= 0 ? '+' : '';
-    return `${sign}${val.toFixed(0)}%`;
-  };
-
-  const handleAdjustmentChange = (
-    key: keyof Adjustments,
-    value: number,
-  ) => {
-    setAdjustments((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+  const handleAdjustmentChange = (key: keyof Adjustments, value: number) => {
+    setAdjustments((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleBaseMetricChange = (key: keyof BaseMetrics, value: number) => {
-    setBaseMetrics((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setBaseMetrics((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleReset = () => {
     setAdjustments({
       leads: 0,
-      bookingRate: 25,
-      showUpRate: 25,
+      bookingRate: 0,
+      showUpRate: 0,
       closeRate: 0,
       aov: 0,
     });
-    // Also reset base metrics to props
     setBaseMetrics({
       leads: avgLeadsPerMonth || 0,
       bookingRate: metrics.bookingRate || 0,
@@ -117,6 +85,13 @@ export default function MetricsComparison({ metrics, avgLeadsPerMonth }: Metrics
       closeRate: metrics.closeRate || 0,
       averageDealValue: metrics.averageDealValue || 0,
     });
+  };
+
+  // Helper to handle slider change (converts absolute value to percentage adjustment)
+  const onSliderChange = (key: keyof Adjustments, newValue: number, baseValue: number) => {
+    if (baseValue === 0) return; // Avoid division by zero
+    const adjustment = ((newValue - baseValue) / baseValue) * 100;
+    handleAdjustmentChange(key, adjustment);
   };
 
   return (
@@ -134,156 +109,70 @@ export default function MetricsComparison({ metrics, avgLeadsPerMonth }: Metrics
         {/* Sliders Section (Left) */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-800 shadow-lg shadow-black/20">
-            <div className="space-y-8">
+            <div className="space-y-12">
               {/* Leads Slider */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-bold text-slate-300 uppercase tracking-wide">
-                    Leads / Month
-                  </label>
-                  <div className="text-sm font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">
-                    {Math.round(projectedMetrics.totalLeads)} / +{adjustments.leads}%
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="300"
-                  value={adjustments.leads}
-                  onChange={(e) =>
-                    handleAdjustmentChange('leads', Number(e.target.value))
-                  }
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-2 font-medium">
-                  <EditableMetricBase
-                    value={baseMetrics.leads}
-                    onChange={(val) => handleBaseMetricChange('leads', val)}
-                    format={(v) => v.toFixed(0)}
-                  />
-                  <span>+300%</span>
-                </div>
-              </div>
+              <SliderControl
+                label="Leads / Month"
+                value={Math.round(projectedMetrics.totalLeads)}
+                min={baseMetrics.leads}
+                max={baseMetrics.leads * 3}
+                onChange={(val) => onSliderChange('leads', val, baseMetrics.leads)}
+                baseValue={baseMetrics.leads}
+                onBaseChange={(val) => handleBaseMetricChange('leads', val)}
+                baseFormat={(v) => v.toFixed(0)}
+              />
 
               {/* Booking Rate Slider */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-bold text-slate-300 uppercase tracking-wide">
-                    Booking Rate
-                  </label>
-                  <div className="text-sm font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">
-                    {(projectedMetrics.bookingRate || 0).toFixed(1)}% / +{adjustments.bookingRate}%
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="300"
-                  value={adjustments.bookingRate}
-                  onChange={(e) =>
-                    handleAdjustmentChange('bookingRate', Number(e.target.value))
-                  }
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-2 font-medium">
-                  <EditableMetricBase
-                    value={baseMetrics.bookingRate}
-                    onChange={(val) => handleBaseMetricChange('bookingRate', val)}
-                    format={(v) => `${v.toFixed(1)}%`}
-                  />
-                  <span>+300%</span>
-                </div>
-              </div>
+              <SliderControl
+                label="Booking Rate"
+                value={Number((projectedMetrics.bookingRate || 0).toFixed(1))}
+                min={baseMetrics.bookingRate}
+                max={100}
+                onChange={(val) => onSliderChange('bookingRate', val, baseMetrics.bookingRate)}
+                baseValue={baseMetrics.bookingRate}
+                onBaseChange={(val) => handleBaseMetricChange('bookingRate', val)}
+                baseFormat={(v) => `${v.toFixed(1)}%`}
+                valueSuffix="%"
+              />
 
               {/* Show Up Rate Slider */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-bold text-slate-300 uppercase tracking-wide">
-                    Show Up Rate
-                  </label>
-                  <div className="text-sm font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">
-                    {(projectedMetrics.showUpRate || 0).toFixed(1)}% / +{adjustments.showUpRate}%
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="300"
-                  value={adjustments.showUpRate}
-                  onChange={(e) =>
-                    handleAdjustmentChange('showUpRate', Number(e.target.value))
-                  }
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-2 font-medium">
-                  <EditableMetricBase
-                    value={baseMetrics.showUpRate}
-                    onChange={(val) => handleBaseMetricChange('showUpRate', val)}
-                    format={(v) => `${v.toFixed(1)}%`}
-                  />
-                  <span>+300%</span>
-                </div>
-              </div>
+              <SliderControl
+                label="Show Up Rate"
+                value={Number((projectedMetrics.showUpRate || 0).toFixed(1))}
+                min={baseMetrics.showUpRate}
+                max={100}
+                onChange={(val) => onSliderChange('showUpRate', val, baseMetrics.showUpRate)}
+                baseValue={baseMetrics.showUpRate}
+                onBaseChange={(val) => handleBaseMetricChange('showUpRate', val)}
+                baseFormat={(v) => `${v.toFixed(1)}%`}
+                valueSuffix="%"
+              />
 
               {/* Close Rate Slider */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-bold text-slate-300 uppercase tracking-wide">
-                    Close Rate
-                  </label>
-                  <div className="text-sm font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">
-                    {(projectedMetrics.closeRate || 0).toFixed(1)}% / +{adjustments.closeRate}%
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="300"
-                  value={adjustments.closeRate}
-                  onChange={(e) =>
-                    handleAdjustmentChange('closeRate', Number(e.target.value))
-                  }
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-2 font-medium">
-                  <EditableMetricBase
-                    value={baseMetrics.closeRate}
-                    onChange={(val) => handleBaseMetricChange('closeRate', val)}
-                    format={(v) => `${v.toFixed(1)}%`}
-                  />
-                  <span>+300%</span>
-                </div>
-              </div>
+              <SliderControl
+                label="Close Rate"
+                value={Number((projectedMetrics.closeRate || 0).toFixed(1))}
+                min={baseMetrics.closeRate}
+                max={100}
+                onChange={(val) => onSliderChange('closeRate', val, baseMetrics.closeRate)}
+                baseValue={baseMetrics.closeRate}
+                onBaseChange={(val) => handleBaseMetricChange('closeRate', val)}
+                baseFormat={(v) => `${v.toFixed(1)}%`}
+                valueSuffix="%"
+              />
 
               {/* AOV Slider */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-bold text-slate-300 uppercase tracking-wide">
-                    Avg Deal Value
-                  </label>
-                  <div className="text-sm font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">
-                    ${(projectedMetrics.averageDealValue || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} / +{adjustments.aov}%
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="200"
-                  value={adjustments.aov}
-                  onChange={(e) =>
-                    handleAdjustmentChange('aov', Number(e.target.value))
-                  }
-                  className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 transition-all"
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-2 font-medium">
-                  <EditableMetricBase
-                    value={baseMetrics.averageDealValue}
-                    onChange={(val) => handleBaseMetricChange('averageDealValue', val)}
-                    format={(v) => `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                  />
-                  <span>${(baseMetrics.averageDealValue * 3).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                </div>
-              </div>
+              <SliderControl
+                label="Avg Deal Value"
+                value={projectedMetrics.averageDealValue || 0}
+                min={baseMetrics.averageDealValue}
+                max={baseMetrics.averageDealValue * 3}
+                onChange={(val) => onSliderChange('aov', val, baseMetrics.averageDealValue)}
+                baseValue={baseMetrics.averageDealValue}
+                onBaseChange={(val) => handleBaseMetricChange('averageDealValue', val)}
+                baseFormat={(v) => `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                valuePrefix="$"
+              />
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-800">
@@ -302,31 +191,35 @@ export default function MetricsComparison({ metrics, avgLeadsPerMonth }: Metrics
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <MetricCard
               title="Projected Monthly Revenue"
-              value={`$${projectedMetrics.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })} / ${formatGrowth(calculateGrowth(baseProjectedMetrics.totalRevenue, projectedMetrics.totalRevenue))}`}
-              unit=""
+              value={projectedMetrics.totalRevenue}
+              unit="$"
               subtitle="Projected monthly cash collected"
               trend="up"
+              prefix="+"
             />
             <MetricCard
               title="Projected Monthly Booked Calls"
-              value={`${projectedMetrics.bookedCalls} / ${formatGrowth(calculateGrowth(baseProjectedMetrics.bookedCalls, projectedMetrics.bookedCalls))}`}
+              value={projectedMetrics.bookedCalls}
               unit=""
               subtitle="Projected booked calls / month"
               trend="up"
+              prefix="+"
             />
             <MetricCard
               title="Projected Monthly Show Ups"
-              value={`${projectedMetrics.showUps} / ${formatGrowth(calculateGrowth(baseProjectedMetrics.showUps, projectedMetrics.showUps))}`}
+              value={projectedMetrics.showUps}
               unit=""
               subtitle="Projected show ups / month"
               trend="up"
+              prefix="+"
             />
             <MetricCard
               title="Projected Monthly Won Deals"
-              value={`${projectedMetrics.wonDeals} / ${formatGrowth(calculateGrowth(baseProjectedMetrics.wonDeals, projectedMetrics.wonDeals))}`}
+              value={projectedMetrics.wonDeals}
               unit=""
               subtitle="Projected won deals / month"
               trend="up"
+              prefix="+"
             />
           </div>
         </div>
@@ -335,7 +228,6 @@ export default function MetricsComparison({ metrics, avgLeadsPerMonth }: Metrics
   );
 }
 
-// Helper component for editable base metrics
 function EditableMetricBase({
   value,
   onChange,
@@ -359,7 +251,7 @@ function EditableMetricBase({
     if (!isNaN(num)) {
       onChange(num);
     } else {
-      setTempValue(value.toString()); // Revert if invalid
+      setTempValue(value.toString());
     }
   };
 
@@ -368,7 +260,7 @@ function EditableMetricBase({
       handleBlur();
     } else if (e.key === 'Escape') {
       setIsEditing(false);
-      setTempValue(value.toString()); // Revert
+      setTempValue(value.toString());
     }
   };
 
@@ -394,6 +286,112 @@ function EditableMetricBase({
     >
       {format(value)}
     </span>
+  );
+}
+
+interface SliderControlProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (val: number) => void;
+  baseValue: number;
+  onBaseChange: (val: number) => void;
+  baseFormat: (v: number) => string;
+  valuePrefix?: string;
+  valueSuffix?: string;
+}
+
+function SliderControl({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+  baseValue,
+  onBaseChange,
+  baseFormat,
+  valuePrefix = '',
+  valueSuffix = '',
+}: SliderControlProps) {
+  const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
+
+  // Calculate absolute difference for top-right label
+  const difference = value - baseValue;
+
+  // Format difference: show absolute value with + sign, no %
+  let formattedDiff = difference > 0 ? `+${Number(difference.toFixed(1))}` : '0';
+  if (valuePrefix === '$') {
+    formattedDiff = difference > 0 ? `+$${difference.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '$0';
+  }
+
+  const isDot = percent <= 5 || percent >= 95;
+
+  return (
+    <div className="relative pt-2 pb-2">
+      <div className="flex justify-between items-center mb-6">
+        <label className="text-sm font-bold text-slate-300 uppercase tracking-wide">
+          {label}
+        </label>
+        <div className="text-sm font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">
+          {formattedDiff}
+        </div>
+      </div>
+
+      <div className="relative h-2 w-full">
+        {/* Track Background */}
+        <div className="absolute top-0 left-0 w-full h-full bg-slate-800 rounded-lg" />
+
+        {/* Active Track */}
+        <div
+          className="absolute top-0 left-0 h-full bg-blue-500 rounded-lg"
+          style={{ width: `${percent}%` }}
+        />
+
+        {/* Custom Thumb */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 transform -translate-x-1/2 z-20 flex items-center justify-center pointer-events-none"
+          style={{ left: `${percent}%` }}
+        >
+          <div
+            className={`
+              bg-blue-600 rounded-full shadow-lg flex items-center justify-center
+              transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+              ${isDot ? 'w-4 h-4 p-0' : 'min-w-[3rem] px-3 py-1'}
+            `}
+          >
+            <span
+              className={`
+                text-white text-xs font-bold whitespace-nowrap overflow-hidden transition-all duration-300
+                ${isDot ? 'max-w-0 opacity-0' : 'max-w-[8rem] opacity-100'}
+              `}
+            >
+              {valuePrefix}{value.toLocaleString()}{valueSuffix}
+            </span>
+          </div>
+        </div>
+
+        {/* Invisible Input for Interaction */}
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={max - min > 100 ? 1 : 0.1}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer z-30"
+        />
+      </div>
+
+      <div className="flex justify-between text-xs text-slate-500 mt-4 font-medium">
+        <EditableMetricBase
+          value={baseValue}
+          onChange={onBaseChange}
+          format={baseFormat}
+        />
+        <span>{valuePrefix}{max.toLocaleString(undefined, { maximumFractionDigits: 0 })}{valueSuffix}</span>
+      </div>
+    </div>
   );
 }
 
@@ -436,7 +434,7 @@ function calculateProjectedMetrics(
 
   return {
     ...current,
-    totalLeads: Math.round(newLeads), // Repurposing totalLeads as Monthly Leads for display
+    totalLeads: Math.round(newLeads),
     bookingRate: newBookingRate,
     bookedCalls: Math.round(newBookedCalls),
     showUpRate: newShowUpRate,
@@ -447,4 +445,3 @@ function calculateProjectedMetrics(
     totalRevenue: newTotalRevenue,
   };
 }
-
